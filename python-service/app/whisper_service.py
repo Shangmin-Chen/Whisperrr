@@ -1,5 +1,53 @@
 """
 WhisperService class for managing OpenAI Whisper models and transcription.
+
+This module provides a comprehensive service layer for managing Whisper model lifecycle
+and performing high-quality audio transcription. It implements a singleton pattern to
+ensure efficient resource management and provides thread-safe operations for concurrent
+transcription requests.
+
+Key Features:
+    - Singleton pattern for efficient resource management
+    - Thread-safe model loading and transcription operations
+    - Asynchronous processing with ThreadPoolExecutor
+    - Comprehensive error handling and recovery
+    - Performance monitoring and metrics collection
+    - Memory management and cleanup
+    - Support for all Whisper model sizes
+    - Multi-language transcription (99+ languages)
+
+Architecture:
+    The WhisperService acts as the core transcription engine, managing:
+    - Model loading and caching
+    - Audio preprocessing and validation
+    - Transcription execution and result formatting
+    - Resource cleanup and memory management
+    - Performance monitoring and logging
+
+Thread Safety:
+    All public methods are thread-safe and can be called concurrently:
+    - Model loading uses locks to prevent race conditions
+    - Transcription operations are isolated in thread pool
+    - Shared state is protected with appropriate synchronization
+    - Resource cleanup is coordinated across threads
+
+Performance Optimization:
+    - Model caching to avoid repeated loading
+    - Efficient memory management with cleanup
+    - Configurable concurrency limits
+    - Audio preprocessing for optimal quality
+    - Performance metrics collection
+
+Error Handling:
+    - Custom exception hierarchy for different error types
+    - Graceful degradation for recoverable errors
+    - Comprehensive logging for debugging
+    - Resource cleanup on failures
+    - Retry logic for transient failures
+
+Author: shangmin
+Version: 1.0
+Since: 2024
 """
 
 import asyncio
@@ -37,17 +85,116 @@ logger = logging.getLogger(__name__)
 
 class WhisperService:
     """
-    Singleton service for managing Whisper models and transcription.
+    Singleton service for managing Whisper models and transcription operations.
     
-    This class handles model loading, caching, and transcription operations
-    with proper resource management and error handling.
+    This class serves as the central coordinator for all Whisper-related operations
+    in the transcription service. It implements a singleton pattern to ensure
+    efficient resource usage and provides thread-safe operations for concurrent
+    transcription requests.
+    
+    Core Responsibilities:
+        - Model Lifecycle Management: Loading, caching, and unloading Whisper models
+        - Transcription Orchestration: Managing the complete transcription pipeline
+        - Resource Management: Efficient memory usage and cleanup
+        - Concurrency Control: Thread-safe operations with proper synchronization
+        - Performance Monitoring: Metrics collection and performance tracking
+        - Error Handling: Comprehensive error management and recovery
+    
+    Singleton Pattern:
+        Uses thread-safe singleton implementation to ensure:
+        - Single model instance per service
+        - Efficient memory usage
+        - Consistent state across requests
+        - Proper resource cleanup
+    
+    Thread Safety:
+        All public methods are designed for concurrent access:
+        - Model loading operations are synchronized
+        - Transcription requests are isolated in thread pool
+        - Shared state is protected with locks
+        - Resource cleanup is coordinated
+    
+    Model Management:
+        Supports all Whisper model sizes:
+        - tiny: 39 MB, fastest processing, basic accuracy
+        - base: 74 MB, balanced speed/accuracy (default)
+        - small: 244 MB, better accuracy, moderate speed
+        - medium: 769 MB, high accuracy, slower processing
+        - large: 1550 MB, highest accuracy, slowest processing
+    
+    Performance Features:
+        - Model caching to avoid repeated loading
+        - Asynchronous processing with ThreadPoolExecutor
+        - Configurable concurrency limits
+        - Memory usage monitoring
+        - Processing time tracking
+        - Automatic resource cleanup
+    
+    Language Support:
+        Supports 99+ languages including:
+        - Major languages: English, Spanish, French, German, Chinese, etc.
+        - Regional variants and dialects
+        - Automatic language detection
+        - Language-specific optimization
+    
+    Error Recovery:
+        - Graceful handling of model loading failures
+        - Automatic retry for transient errors
+        - Resource cleanup on failures
+        - Detailed error reporting
+        - Service degradation strategies
+    
+    Usage Example:
+        ```python
+        # Get service instance
+        service = WhisperService()
+        
+        # Load model
+        await service.load_model("base")
+        
+        # Transcribe audio
+        result = await service.transcribe_audio(
+            file_path="audio.mp3",
+            language="en"
+        )
+        
+        print(result.text)
+        ```
+    
+    Attributes:
+        _instance: Singleton instance reference
+        _lock: Thread lock for singleton creation
+        _model: Currently loaded Whisper model
+        _model_size: Size of currently loaded model
+        _model_load_time: Timestamp when model was loaded
+        _is_loading: Flag indicating model loading in progress
+        _active_transcriptions: Count of active transcription operations
+        _start_time: Service startup timestamp
+        _executor: ThreadPoolExecutor for async operations
+        _model_descriptions: Human-readable model descriptions
+        _supported_languages: List of supported language codes
     """
     
     _instance = None
     _lock = threading.Lock()
     
     def __new__(cls):
-        """Ensure singleton pattern."""
+        """
+        Ensure singleton pattern with thread-safe double-checked locking.
+        
+        This method implements the singleton pattern using double-checked locking
+        to ensure thread safety while minimizing synchronization overhead. Only
+        one instance of WhisperService will exist throughout the application
+        lifecycle.
+        
+        Thread Safety:
+            - Uses class-level lock for synchronization
+            - Double-checked locking pattern prevents race conditions
+            - Minimal performance impact after first creation
+        
+        Returns:
+            WhisperService: The singleton instance
+        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -55,7 +202,39 @@ class WhisperService:
         return cls._instance
     
     def __init__(self):
-        """Initialize the WhisperService."""
+        """
+        Initialize the WhisperService singleton instance.
+        
+        This method sets up the service state and resources needed for Whisper
+        model management and transcription operations. It's designed to be called
+        only once due to the singleton pattern.
+        
+        Initialization Process:
+            1. Check if already initialized (singleton safety)
+            2. Initialize core state variables
+            3. Set up ThreadPoolExecutor for async operations
+            4. Configure model descriptions and language support
+            5. Log successful initialization
+        
+        State Variables:
+            - _model: Currently loaded Whisper model (None initially)
+            - _model_size: Size of loaded model (None initially)
+            - _model_load_time: Timestamp when model was loaded
+            - _is_loading: Flag to prevent concurrent model loading
+            - _active_transcriptions: Counter for active operations
+            - _start_time: Service startup time for uptime calculation
+            - _executor: ThreadPoolExecutor for CPU-intensive operations
+        
+        Resource Management:
+            - ThreadPoolExecutor configured with max concurrent transcriptions
+            - Model descriptions for user-friendly information
+            - Supported language list for validation
+        
+        Thread Safety:
+            - Initialization check prevents double initialization
+            - All state variables are instance-specific
+            - ThreadPoolExecutor provides thread-safe async execution
+        """
         if hasattr(self, '_initialized'):
             return
         

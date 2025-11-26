@@ -1,5 +1,66 @@
 """
 FastAPI application for the Whisperrr transcription service.
+
+This module serves as the main entry point for the Whisperrr Python transcription service,
+which provides high-quality speech-to-text capabilities using OpenAI's Whisper library.
+The service is designed as a production-ready microservice that can be deployed independently
+and integrated with the Spring Boot backend API.
+
+Architecture Overview:
+    The service follows a layered architecture pattern:
+    - API Layer: FastAPI endpoints for HTTP communication
+    - Service Layer: WhisperService for model management and transcription
+    - Utility Layer: Helper functions for audio processing and validation
+    - Configuration Layer: Environment-based configuration management
+
+Key Features:
+    - High-quality transcription using OpenAI Whisper models
+    - Asynchronous processing with ThreadPoolExecutor
+    - Multiple audio format support (MP3, WAV, M4A, FLAC, OGG)
+    - Dynamic model loading and caching
+    - Comprehensive error handling and logging
+    - Performance monitoring and metrics
+    - CORS configuration for cross-origin requests
+    - Health checks and service monitoring
+
+Processing Flow:
+    1. Client uploads audio file via POST /transcribe
+    2. Service validates file format, size, and content
+    3. Audio is preprocessed and normalized if needed
+    4. Whisper model transcribes the audio asynchronously
+    5. Results are formatted and returned with metadata
+    6. Temporary files are cleaned up automatically
+
+Integration:
+    This service is designed to work with the Spring Boot backend:
+    - Backend forwards transcription requests to this service
+    - Results are returned to backend for database storage
+    - Status updates are managed by the backend API
+    - CORS is configured to accept requests from backend
+
+Performance Considerations:
+    - ThreadPoolExecutor for concurrent processing
+    - Model caching to avoid repeated loading
+    - Memory management and cleanup
+    - Configurable concurrency limits
+    - Efficient audio preprocessing
+
+Error Handling:
+    - Custom exception hierarchy for different error types
+    - Comprehensive error logging with correlation IDs
+    - Graceful degradation for service failures
+    - Proper HTTP status codes for different error scenarios
+
+Monitoring and Observability:
+    - Structured logging with performance metrics
+    - Health check endpoints for monitoring
+    - Memory usage tracking
+    - Request correlation IDs for tracing
+    - Processing time measurements
+
+Author: shangmin
+Version: 1.0
+Since: 2024
 """
 
 import logging
@@ -39,7 +100,45 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager for startup and shutdown events."""
+    """
+    Application lifespan manager for startup and shutdown events.
+    
+    This context manager handles the complete lifecycle of the FastAPI application,
+    including service initialization, model loading, and graceful shutdown. It ensures
+    that resources are properly managed and cleaned up.
+    
+    Startup Process:
+        1. Initialize logging and service components
+        2. Load the default Whisper model into memory
+        3. Verify model loading and system readiness
+        4. Log startup completion and performance metrics
+    
+    Shutdown Process:
+        1. Wait for active transcriptions to complete
+        2. Shutdown thread pool executor gracefully
+        3. Clear models from memory
+        4. Clean up temporary files and resources
+        5. Log shutdown completion
+    
+    Error Handling:
+        - Startup failures are logged and re-raised to prevent service start
+        - Shutdown errors are logged but don't prevent application termination
+        - Resource cleanup is attempted even if errors occur
+    
+    Performance Monitoring:
+        - Startup time is measured and logged
+        - Memory usage is tracked during model loading
+        - Service readiness is verified before accepting requests
+    
+    Args:
+        app: The FastAPI application instance
+        
+    Yields:
+        None: Control is yielded to the application during normal operation
+        
+    Raises:
+        Exception: Re-raises any startup errors to prevent service initialization
+    """
     # Startup
     logger.info("Starting Whisperrr transcription service")
     start_time = time.time()
@@ -192,10 +291,112 @@ async def transcribe_audio(
     correlation_id: str = Depends(get_correlation_id_dependency)
 ):
     """
-    Transcribe an audio file using Whisper.
+    Transcribe an audio file using OpenAI's Whisper model.
     
-    Supports multiple audio formats and provides detailed transcription results
-    with timing information and confidence scores.
+    This endpoint provides high-quality speech-to-text transcription for uploaded
+    audio files. It supports multiple audio formats and provides detailed results
+    including timing information, confidence scores, and language detection.
+    
+    Supported Audio Formats:
+        - MP3 (.mp3): Most common compressed format
+        - WAV (.wav): Uncompressed, highest quality
+        - M4A (.m4a): Apple's compressed format
+        - FLAC (.flac): Lossless compression
+        - OGG (.ogg): Open-source compressed format
+        - WMA (.wma): Windows Media Audio
+    
+    Processing Pipeline:
+        1. File validation (format, size, content type)
+        2. Audio preprocessing and normalization
+        3. Whisper model transcription with specified parameters
+        4. Result formatting with timing and confidence data
+        5. Temporary file cleanup
+    
+    Model Selection:
+        - tiny: Fastest, least accurate (39 MB)
+        - base: Good balance of speed and accuracy (74 MB) [default]
+        - small: Better accuracy, slower (244 MB)
+        - medium: Good accuracy, slower (769 MB)
+        - large: Best accuracy, slowest (1550 MB)
+    
+    Language Detection:
+        - Automatic language detection if not specified
+        - 99+ languages supported by Whisper
+        - Language hint can improve accuracy for known languages
+    
+    Temperature Parameter:
+        - 0.0: Deterministic output (recommended for most use cases)
+        - 0.1-0.3: Slight randomness for creative applications
+        - 0.4-1.0: Higher randomness (may reduce accuracy)
+    
+    Task Types:
+        - "transcribe": Convert speech to text in original language
+        - "translate": Convert speech to English text (regardless of input language)
+    
+    Response Format:
+        Returns comprehensive transcription results including:
+        - Full transcribed text
+        - Detected language
+        - Audio duration
+        - Word-level segments with timestamps
+        - Confidence scores (when available)
+        - Processing metadata
+    
+    Performance Considerations:
+        - Processing time varies by file length and model size
+        - Larger models provide better accuracy but slower processing
+        - Files are processed asynchronously to avoid blocking
+        - Memory usage scales with model size and file length
+    
+    Error Handling:
+        - File validation errors return 400 Bad Request
+        - File size limit exceeded returns 413 Payload Too Large
+        - Processing failures return 500 Internal Server Error
+        - All errors include detailed error messages and correlation IDs
+    
+    Args:
+        file: Uploaded audio file (multipart/form-data)
+              Must be valid audio format within size limits
+        model_size: Whisper model to use (optional, defaults to configured model)
+                   Must be one of: tiny, base, small, medium, large
+        language: Language hint as ISO 639-1 code (optional, e.g., "en", "es", "fr")
+                 Improves accuracy when input language is known
+        temperature: Sampling temperature (optional, default 0.0)
+                    Controls randomness in transcription output
+        task: Processing task (optional, default "transcribe")
+              Either "transcribe" or "translate"
+        correlation_id: Request tracking ID (automatically generated)
+    
+    Returns:
+        TranscriptionResponse: Comprehensive transcription results including:
+            - text: Complete transcribed text
+            - language: Detected language code
+            - duration: Audio duration in seconds
+            - segments: List of timed segments with text
+            - confidence_score: Overall confidence (0.0-1.0)
+            - model_used: Whisper model size used
+            - processing_time: Time taken to process
+    
+    Raises:
+        HTTPException 400: Invalid file format, size, or parameters
+        HTTPException 413: File size exceeds maximum limit
+        HTTPException 500: Transcription processing failed
+        HTTPException 503: Service unavailable (model not loaded)
+    
+    Example:
+        ```python
+        import requests
+        
+        with open("audio.mp3", "rb") as f:
+            response = requests.post(
+                "http://localhost:8000/transcribe",
+                files={"file": f},
+                params={"language": "en", "model_size": "base"}
+            )
+        
+        result = response.json()
+        print(result["text"])
+        ```
     """
     start_time = time.time()
     
@@ -264,7 +465,54 @@ async def transcribe_audio(
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Health check endpoint."""
+    """
+    Health check endpoint for service monitoring and load balancing.
+    
+    This endpoint provides essential health information about the transcription
+    service, including model status, uptime, and overall service availability.
+    It's designed for use by monitoring systems, load balancers, and clients
+    to verify service readiness.
+    
+    Health Status Indicators:
+        - "healthy": Service is fully operational with model loaded
+        - "degraded": Service is running but model not loaded
+        - "unhealthy": Service is experiencing issues (handled by exception handlers)
+    
+    Monitoring Information:
+        - Model loading status and current model size
+        - Service uptime since last restart
+        - Memory usage and resource availability
+        - Active transcription count
+    
+    Usage Scenarios:
+        - Load balancer health checks for traffic routing
+        - Monitoring system alerts and dashboards
+        - Client-side service availability verification
+        - Deployment readiness checks
+        - Auto-scaling trigger conditions
+    
+    Response Interpretation:
+        - HTTP 200 + "healthy": Service ready for transcription requests
+        - HTTP 200 + "degraded": Service running but may need model loading
+        - HTTP 500+: Service experiencing issues, check logs
+    
+    Returns:
+        HealthResponse: Service health information including:
+            - status: Overall health status ("healthy" or "degraded")
+            - model_loaded: Whether Whisper model is loaded and ready
+            - model_size: Current model size if loaded (e.g., "base", "large")
+            - uptime: Service uptime in seconds since startup
+    
+    Example Response:
+        ```json
+        {
+            "status": "healthy",
+            "model_loaded": true,
+            "model_size": "base",
+            "uptime": 3600.5
+        }
+        ```
+    """
     return HealthResponse(
         status="healthy" if whisper_service.is_model_loaded() else "degraded",
         model_loaded=whisper_service.is_model_loaded(),
@@ -275,13 +523,118 @@ async def health_check():
 
 @app.get("/model/info", response_model=ModelInfoResponse)
 async def get_model_info():
-    """Get information about the currently loaded model."""
+    """
+    Get detailed information about the currently loaded Whisper model.
+    
+    This endpoint provides comprehensive information about the active Whisper model,
+    including performance metrics, capabilities, and resource usage. It's useful
+    for monitoring, debugging, and client applications that need to understand
+    the current service configuration.
+    
+    Model Information Provided:
+        - Current model size and capabilities
+        - Memory usage and resource consumption
+        - Model loading time and performance metrics
+        - Supported languages (99+ languages)
+        - Loading status and timestamps
+    
+    Use Cases:
+        - Performance monitoring and optimization
+        - Client applications adapting to model capabilities
+        - Debugging transcription quality issues
+        - Resource usage tracking and planning
+        - Service configuration verification
+    
+    Model Characteristics:
+        - tiny: 39 MB, fastest, basic accuracy
+        - base: 74 MB, balanced speed/accuracy
+        - small: 244 MB, better accuracy
+        - medium: 769 MB, good accuracy
+        - large: 1550 MB, best accuracy
+    
+    Returns:
+        ModelInfoResponse: Detailed model information including:
+            - model_size: Current model size (e.g., "base", "large")
+            - memory_usage_mb: Current memory usage in megabytes
+            - load_time_seconds: Time taken to load the model
+            - supported_languages: List of supported language codes
+            - is_loaded: Whether model is currently loaded and ready
+            - last_loaded: Timestamp when model was last loaded
+    
+    Example Response:
+        ```json
+        {
+            "model_size": "base",
+            "memory_usage_mb": 1024.5,
+            "load_time_seconds": 2.3,
+            "supported_languages": ["en", "es", "fr", "de", ...],
+            "is_loaded": true,
+            "last_loaded": "2024-01-15T10:30:45.123Z"
+        }
+        ```
+    """
     return whisper_service.get_model_info()
 
 
 @app.post("/model/load/{model_size}")
 async def load_model(model_size: str):
-    """Load a specific Whisper model size."""
+    """
+    Load a specific Whisper model size into memory.
+    
+    This endpoint allows dynamic loading of different Whisper model sizes based
+    on accuracy and performance requirements. Loading a new model will replace
+    the currently loaded model, so this operation should be used carefully in
+    production environments with active transcriptions.
+    
+    Model Size Options:
+        - tiny: 39 MB, ~32x realtime, lowest accuracy
+        - base: 74 MB, ~16x realtime, good balance
+        - small: 244 MB, ~6x realtime, better accuracy
+        - medium: 769 MB, ~2x realtime, high accuracy
+        - large: 1550 MB, ~1x realtime, highest accuracy
+    
+    Performance Considerations:
+        - Larger models require more memory and processing time
+        - Model loading can take several seconds to minutes
+        - Loading blocks other model operations temporarily
+        - Previous model is unloaded to free memory
+    
+    Use Cases:
+        - Switching to higher accuracy model for important transcriptions
+        - Downgrading to faster model for real-time applications
+        - Testing different models for quality comparison
+        - Optimizing resource usage based on requirements
+    
+    Concurrency Handling:
+        - Only one model loading operation allowed at a time
+        - Active transcriptions are allowed to complete
+        - New transcription requests wait for model loading
+        - Proper error handling for concurrent load attempts
+    
+    Args:
+        model_size: Whisper model size to load
+                   Must be one of: tiny, base, small, medium, large
+    
+    Returns:
+        dict: Model loading result including:
+            - success: Whether loading succeeded
+            - model_size: The loaded model size
+            - load_time_seconds: Time taken to load
+            - memory_usage_mb: Memory usage after loading
+            - message: Success/failure message
+    
+    Raises:
+        HTTPException 400: Invalid model size specified
+        HTTPException 409: Model loading already in progress
+        HTTPException 500: Model loading failed due to system error
+    
+    Example:
+        ```python
+        response = requests.post("http://localhost:8000/model/load/large")
+        result = response.json()
+        print(f"Loaded {result['model_size']} in {result['load_time_seconds']}s")
+        ```
+    """
     try:
         # Validate model size
         if model_size not in settings.available_model_sizes:

@@ -1,5 +1,67 @@
 """
 Configuration management for the Whisperrr FastAPI service.
+
+This module provides comprehensive configuration management for the Whisperrr
+transcription service using Pydantic settings. It supports environment-based
+configuration with validation, type checking, and default values for all
+service parameters.
+
+Key Features:
+    - Environment variable support with .env file loading
+    - Type validation and conversion using Pydantic
+    - Comprehensive validation rules for all settings
+    - Default values for development and production
+    - Automatic directory creation for file paths
+    - Flexible CORS origin configuration
+    - Performance and resource limit settings
+
+Configuration Categories:
+    - Model Configuration: Whisper model settings and options
+    - API Configuration: FastAPI service settings and metadata
+    - Processing Configuration: Concurrency and timeout settings
+    - Performance Configuration: Monitoring and optimization settings
+    - File Configuration: Upload limits and format support
+
+Environment Variables:
+    All settings can be configured via environment variables:
+    - MODEL_SIZE: Whisper model size (tiny, base, small, medium, large)
+    - MAX_FILE_SIZE_MB: Maximum upload file size in megabytes
+    - UPLOAD_DIR: Directory for temporary file storage
+    - LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - CORS_ORIGINS: Comma-separated list of allowed origins
+    - MAX_CONCURRENT_TRANSCRIPTIONS: Maximum parallel transcriptions
+
+Production Considerations:
+    - All settings have sensible defaults for development
+    - Production deployments should override via environment variables
+    - Validation ensures configuration consistency
+    - Resource limits prevent system overload
+    - Security settings for CORS and file handling
+
+Validation Features:
+    - Model size validation against supported options
+    - File size limits with reasonable bounds
+    - Directory creation and permission checking
+    - CORS origin parsing and validation
+    - Log level validation
+
+Usage:
+    ```python
+    from .config import settings
+    
+    # Access configuration values
+    model_size = settings.model_size
+    max_file_size = settings.max_file_size_bytes
+    
+    # Configuration is automatically loaded from:
+    # 1. Environment variables
+    # 2. .env file
+    # 3. Default values
+    ```
+
+Author: shangmin
+Version: 1.0
+Since: 2024
 """
 
 import os
@@ -9,7 +71,60 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Application settings with environment variable support."""
+    """
+    Application settings with comprehensive environment variable support.
+    
+    This class defines all configuration parameters for the Whisperrr transcription
+    service using Pydantic's BaseSettings. It provides type validation, default
+    values, and automatic environment variable loading with .env file support.
+    
+    Configuration Philosophy:
+        - Secure defaults for development
+        - Environment-specific overrides for production
+        - Comprehensive validation for all parameters
+        - Clear documentation for each setting
+        - Flexible configuration without code changes
+    
+    Environment Variable Mapping:
+        - Setting names are automatically mapped to environment variables
+        - Case-insensitive matching (MODEL_SIZE or model_size)
+        - .env file support for local development
+        - Docker-friendly environment variable names
+    
+    Validation Strategy:
+        - Type checking for all parameters
+        - Range validation for numeric values
+        - Format validation for strings
+        - Dependency validation between related settings
+        - Automatic resource creation (directories, etc.)
+    
+    Configuration Categories:
+        1. Model Settings: Whisper model configuration
+        2. API Settings: FastAPI service configuration
+        3. Processing Settings: Performance and concurrency
+        4. File Settings: Upload and storage configuration
+        5. Monitoring Settings: Logging and health checks
+    
+    Production Deployment:
+        ```bash
+        # Set via environment variables
+        export MODEL_SIZE=large
+        export MAX_FILE_SIZE_MB=100
+        export LOG_LEVEL=INFO
+        export CORS_ORIGINS="https://myapp.com,https://api.myapp.com"
+        
+        # Or via Docker
+        docker run -e MODEL_SIZE=large -e MAX_FILE_SIZE_MB=100 whisperrr
+        ```
+    
+    Development Setup:
+        ```bash
+        # Create .env file
+        echo "MODEL_SIZE=base" > .env
+        echo "LOG_LEVEL=DEBUG" >> .env
+        echo "MAX_CONCURRENT_TRANSCRIPTIONS=1" >> .env
+        ```
+    """
     
     # Model configuration
     model_size: str = "base"
