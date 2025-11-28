@@ -1,212 +1,157 @@
 /**
- * Custom React hook for managing transcription workflow state and operations.
+ * Simplified React hook for direct audio transcription.
  * 
- * This hook provides a comprehensive interface for handling the complete
- * audio transcription workflow, from file upload through status monitoring
- * to result retrieval. It integrates with React Query for efficient data
- * fetching and caching.
+ * This hook provides a streamlined interface for instant audio transcription
+ * without job queuing or polling. It handles file uploads and returns
+ * transcription results immediately, simplifying the user experience.
  * 
  * Key Features:
- *   - Complete transcription workflow management
- *   - Real-time status polling with automatic updates
- *   - Optimistic UI updates and error handling
- *   - Automatic cleanup and resource management
- *   - Type-safe state management
+ *   - Direct transcription without job management
+ *   - Instant results without polling
+ *   - Simplified state management
+ *   - Type-safe error handling
  *   - Integration with React Query for caching
  * 
- * Workflow States:
+ * Workflow:
  *   1. Idle: Ready to accept file upload
- *   2. Uploading: File being uploaded to server
- *   3. Processing: Server transcribing audio
- *   4. Completed: Transcription finished successfully
- *   5. Failed: Error occurred during process
+ *   2. Processing: File being transcribed
+ *   3. Completed: Transcription results available
+ *   4. Failed: Error occurred during transcription
  * 
- * Polling Strategy:
- *   - Automatic status polling when job is active
- *   - Configurable polling interval (default 2 seconds)
- *   - Smart polling that stops when job completes
- *   - Background polling support for tab switching
- * 
- * Error Handling:
- *   - Comprehensive error capture from all stages
- *   - User-friendly error messages
- *   - Automatic error recovery where possible
- *   - Manual error clearing functionality
- * 
- * Performance Optimizations:
- *   - React Query caching for reduced API calls
- *   - Conditional queries based on state
- *   - Automatic cleanup of unused queries
- *   - Optimized re-render patterns
+ * Benefits:
+ *   - No complex job state management
+ *   - Immediate feedback to users
+ *   - Reduced API complexity
+ *   - Simplified error handling
  * 
  * @author shangmin
- * @version 1.0
+ * @version 2.0
  * @since 2024
  */
 
 import { useState, useCallback } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { TranscriptionService } from '../services/transcription';
 import { 
-  AudioUploadResponse, 
   TranscriptionResultResponse,
   TranscriptionStatus 
 } from '../types/transcription';
-import { APP_CONFIG } from '../utils/constants';
 
 /**
- * Return type interface for the useTranscription hook.
+ * Return type interface for the simplified useTranscription hook.
  * 
- * This interface defines all the state, actions, and computed values
- * that the hook provides to consuming components.
+ * This interface defines the streamlined state and actions provided
+ * by the hook for direct transcription operations.
  */
 export interface UseTranscriptionReturn {
-  // State - Current workflow state
-  /** Current job ID for tracking transcription progress */
-  currentJobId: string | null;
-  /** Upload operation status */
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
-  /** Current transcription processing status */
-  transcriptionStatus: TranscriptionStatus | null;
+  // State - Current transcription state
   /** Final transcription result when completed */
   transcriptionResult: TranscriptionResultResponse | null;
-  /** Current error message if any operation failed */
+  /** Current error message if transcription failed */
   error: string | null;
   
-  // Actions - Functions to control the workflow
-  /** Upload an audio file and start transcription */
-  uploadAudio: (file: File) => Promise<void>;
+  // Actions - Functions to control transcription
+  /** Upload and transcribe an audio file instantly */
+  transcribeAudio: (file: File) => Promise<void>;
   /** Clear current error message */
   clearError: () => void;
-  /** Reset entire workflow to initial state */
+  /** Reset to initial state */
   reset: () => void;
   
   // Computed - Derived state for UI logic
-  /** Whether file upload is in progress */
-  isUploading: boolean;
-  /** Whether transcription is being processed */
-  isProcessing: boolean;
+  /** Whether transcription is in progress */
+  isTranscribing: boolean;
   /** Whether transcription completed successfully */
   isCompleted: boolean;
   /** Whether transcription failed */
   isFailed: boolean;
-  /** Current progress percentage (0-100) */
-  progress: number;
+  /** Whether the hook is in idle state (ready for new transcription) */
+  isIdle: boolean;
 }
 
 /**
- * Custom hook that manages the complete transcription workflow.
+ * Custom hook for direct audio transcription.
  * 
- * This hook encapsulates all the logic needed to handle audio file uploads,
- * monitor transcription progress, and retrieve results. It provides a clean
- * interface for components to interact with the transcription service.
+ * This hook encapsulates the logic for instant audio transcription,
+ * providing a simple interface for components to upload files and
+ * receive transcription results immediately.
  * 
  * State Management:
- *   - Uses React state for local workflow state
- *   - Integrates with React Query for server state
- *   - Provides computed values for UI logic
- *   - Handles state transitions automatically
+ *   - Uses React state for transcription results and errors
+ *   - Integrates with React Query mutation for API calls
+ *   - Provides computed values for UI state
+ *   - Simple state transitions: idle → transcribing → completed/failed
  * 
  * API Integration:
- *   - Upload mutation for file uploads
- *   - Status query with automatic polling
- *   - Result query triggered on completion
- *   - Proper error handling for all operations
+ *   - Single mutation for direct transcription
+ *   - Proper error handling and user feedback
+ *   - Type-safe response handling
  * 
- * Lifecycle Management:
- *   - Automatic query enabling/disabling based on state
- *   - Smart polling that stops when appropriate
- *   - Resource cleanup on component unmount
- *   - State reset functionality
+ * Usage Example:
+ *   ```tsx
+ *   const { transcribeAudio, transcriptionResult, isTranscribing, error } = useTranscription();
+ *   
+ *   const handleFileUpload = async (file: File) => {
+ *     await transcribeAudio(file);
+ *   };
+ *   ```
  * 
- * @returns UseTranscriptionReturn Complete transcription workflow interface
+ * @returns UseTranscriptionReturn Simplified transcription interface
  */
 export const useTranscription = (): UseTranscriptionReturn => {
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionResultResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Upload mutation
-  const uploadMutation = useMutation({
-    mutationFn: (file: File) => TranscriptionService.uploadAudio(file),
-    onSuccess: (data: AudioUploadResponse) => {
-      setCurrentJobId(data.jobId);
+  // Direct transcription mutation
+  const transcriptionMutation = useMutation({
+    mutationFn: (file: File) => TranscriptionService.transcribeAudio(file),
+    onSuccess: (data: TranscriptionResultResponse) => {
+      setTranscriptionResult(data);
       setError(null);
     },
     onError: (error: any) => {
-      setError(error.response?.data?.message || error.message || 'Upload failed');
+      setError(error.response?.data?.message || error.message || 'Transcription failed');
+      setTranscriptionResult(null);
     },
-  });
-
-  // Status query (only runs when we have a jobId)
-  const statusQuery = useQuery({
-    queryKey: ['transcription-status', currentJobId],
-    queryFn: () => TranscriptionService.getStatus(currentJobId!),
-    enabled: !!currentJobId,
-    refetchInterval: (query) => {
-      // Stop polling if completed or failed
-      const data = query.state.data;
-      if (data?.status === TranscriptionStatus.COMPLETED || 
-          data?.status === TranscriptionStatus.FAILED) {
-        return false;
-      }
-      return APP_CONFIG.pollingInterval;
-    },
-    refetchIntervalInBackground: true,
-  });
-
-  // Result query (only runs when status is completed)
-  const resultQuery = useQuery({
-    queryKey: ['transcription-result', currentJobId],
-    queryFn: () => TranscriptionService.getResult(currentJobId!),
-    enabled: !!currentJobId && statusQuery.data?.status === TranscriptionStatus.COMPLETED,
   });
 
   // Actions
-  const uploadAudio = useCallback(async (file: File) => {
+  const transcribeAudio = useCallback(async (file: File) => {
     setError(null);
-    await uploadMutation.mutateAsync(file);
-  }, [uploadMutation]);
+    setTranscriptionResult(null);
+    await transcriptionMutation.mutateAsync(file);
+  }, [transcriptionMutation]);
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   const reset = useCallback(() => {
-    setCurrentJobId(null);
+    setTranscriptionResult(null);
     setError(null);
-    uploadMutation.reset();
-    // Note: React Query v5 doesn't have remove method, queries are automatically cleaned up
-  }, [uploadMutation]);
+    transcriptionMutation.reset();
+  }, [transcriptionMutation]);
 
   // Computed values
-  const isUploading = uploadMutation.isPending;
-  const isProcessing = statusQuery.data?.status === TranscriptionStatus.PROCESSING;
-  const isCompleted = statusQuery.data?.status === TranscriptionStatus.COMPLETED;
-  const isFailed = statusQuery.data?.status === TranscriptionStatus.FAILED;
-  const progress = statusQuery.data?.progress || 0;
-
-  const uploadStatus = uploadMutation.isPending ? 'uploading' : 
-                      uploadMutation.isError ? 'error' : 
-                      uploadMutation.isSuccess ? 'success' : 'idle';
+  const isTranscribing = transcriptionMutation.isPending;
+  const isCompleted = transcriptionResult?.status === TranscriptionStatus.COMPLETED;
+  const isFailed = transcriptionMutation.isError || transcriptionResult?.status === TranscriptionStatus.FAILED;
+  const isIdle = !isTranscribing && !isCompleted && !isFailed;
 
   return {
     // State
-    currentJobId,
-    uploadStatus,
-    transcriptionStatus: statusQuery.data?.status || null,
-    transcriptionResult: resultQuery.data || null,
-    error: error || uploadMutation.error?.message || statusQuery.error?.message || resultQuery.error?.message,
+    transcriptionResult,
+    error: error || transcriptionMutation.error?.message,
     
     // Actions
-    uploadAudio,
+    transcribeAudio,
     clearError,
     reset,
     
     // Computed
-    isUploading,
-    isProcessing,
+    isTranscribing,
     isCompleted,
     isFailed,
-    progress,
+    isIdle,
   };
 };

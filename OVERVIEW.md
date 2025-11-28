@@ -15,13 +15,13 @@
 
 ## System Architecture
 
-Whisperrr is a modern, microservices-based audio transcription platform that leverages OpenAI's Whisper library for high-quality speech-to-text conversion. The system is designed with scalability, maintainability, and performance in mind.
+Whisperrr is a simplified, lightweight audio transcription platform that leverages OpenAI's Whisper library for instant speech-to-text conversion. The system is designed for simplicity, performance, and immediate results without persistence overhead.
 
 ### High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Whisperrr Platform                      │
+│                    Whisperrr Platform (Simplified)             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
@@ -29,14 +29,19 @@ Whisperrr is a modern, microservices-based audio transcription platform that lev
 │  │  React Frontend │◄──►│ Spring Boot API │◄──►│   Python    │ │
 │  │   (Port 3000)   │    │   (Port 8080)   │    │  Service    │ │
 │  │                 │    │                 │    │ (Port 8000) │ │
+│  │  • File Upload  │    │ • Validation    │    │ • Whisper AI│ │
+│  │  • Instant UI   │    │ • Proxy/Relay   │    │ • Direct    │ │
+│  │  • Results View │    │ • Error Handle  │    │   Processing│ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │           │                       │                      │     │
 │           │                       │                      │     │
 │           ▼                       ▼                      ▼     │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │   Web Browser   │    │   PostgreSQL    │    │   Whisper   │ │
-│  │    (Client)     │    │   Database      │    │   Models    │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────┘ │
+│  ┌─────────────────┐              │              ┌─────────────┐ │
+│  │   Web Browser   │              │              │   Whisper   │ │
+│  │    (Client)     │              │              │   Models    │ │
+│  └─────────────────┘              │              └─────────────┘ │
+│                                   │                              │
+│                          No Database - Stateless               │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -48,21 +53,20 @@ Whisperrr is a modern, microservices-based audio transcription platform that lev
 - **Technology**: React 18 + TypeScript + Tailwind CSS
 - **Responsibilities**:
   - File upload with drag-and-drop interface
-  - Real-time status monitoring with polling
-  - Results display with formatting and export options
+  - Instant transcription results display
+  - Results formatting and export options
   - Responsive design for mobile and desktop
   - Error handling and user feedback
 
-#### 2. Spring Boot API (Business Logic Layer)
-- **Purpose**: Business logic orchestration and data management
-- **Technology**: Spring Boot 3 + Java 21 + PostgreSQL
+#### 2. Spring Boot API (Proxy Layer)
+- **Purpose**: Lightweight proxy and validation layer
+- **Technology**: Spring Boot 3 + Java 21 (No Database)
 - **Responsibilities**:
   - RESTful API endpoints for client communication
-  - File upload validation and processing
-  - Job management and status tracking
-  - Database operations (CRUD for all entities)
-  - Integration with Python transcription service
+  - File upload validation and preprocessing
+  - Direct communication with Python transcription service
   - CORS configuration for frontend communication
+  - Error handling and response formatting
 
 #### 3. Python Service (Processing Layer)
 - **Purpose**: AI-powered audio transcription
@@ -74,16 +78,6 @@ Whisperrr is a modern, microservices-based audio transcription platform that lev
   - Multiple model size support (tiny to large)
   - 99+ language support with automatic detection
   - Performance monitoring and resource management
-
-#### 4. PostgreSQL Database (Data Layer)
-- **Purpose**: Persistent data storage
-- **Technology**: PostgreSQL 16 with Flyway migrations
-- **Responsibilities**:
-  - User account management
-  - Audio file metadata storage
-  - Job tracking and status management
-  - Transcription results and metadata
-  - Audit logging and performance metrics
 
 ---
 
@@ -136,48 +130,36 @@ src/
 ```
 src/main/java/com/shangmin/whisperrr/
 ├── config/              # Configuration classes
-│   ├── CorsConfig.java     # Cross-origin resource sharing
-│   └── JpaConfig.java      # Database configuration
+│   └── CorsConfig.java     # Cross-origin resource sharing
 ├── controller/          # REST API endpoints
 │   └── AudioController.java # Audio transcription endpoints
 ├── dto/                 # Data Transfer Objects
-│   ├── AudioUploadResponse.java
-│   ├── TranscriptionStatusResponse.java
-│   └── TranscriptionResultResponse.java
-├── entity/              # JPA database entities
-│   ├── User.java           # User accounts
-│   ├── AudioFile.java      # Audio file metadata
-│   ├── Job.java            # Transcription jobs
-│   └── Transcription.java  # Transcription results
+│   ├── TranscriptionResultResponse.java
+│   └── ErrorResponse.java
 ├── enums/               # Enumeration types
-│   ├── JobStatus.java      # Job lifecycle states
-│   ├── AudioFormat.java    # Supported audio formats
-│   └── UserRole.java       # User permission levels
+│   ├── JobStatus.java      # Transcription status states
+│   └── AudioFormat.java    # Supported audio formats
 ├── exception/           # Error handling
 │   ├── GlobalExceptionHandler.java
-│   └── Custom exception classes
-├── repository/          # Data access layer
-│   ├── UserRepository.java
-│   ├── AudioFileRepository.java
-│   ├── JobRepository.java
-│   └── TranscriptionRepository.java
+│   ├── FileValidationException.java
+│   └── TranscriptionProcessingException.java
 └── service/             # Business logic layer
     ├── AudioService.java      # Interface definition
     └── impl/
-        └── AudioServiceImpl.java # Implementation
+        └── AudioServiceImpl.java # Direct transcription implementation
 ```
 
 #### Key Backend Patterns
 
-1. **Layered Architecture**: Clear separation of concerns
-   - Controller → Service → Repository → Entity
+1. **Simplified Architecture**: Lightweight proxy pattern
+   - Controller → Service → Python Service
    - Dependency injection with Spring IoC
    - Interface-based design for testability
 
-2. **Domain-Driven Design**: Rich domain models
-   - Entities with business logic methods
-   - Value objects for complex types
-   - Repository pattern for data access
+2. **Proxy Pattern**: Direct service communication
+   - Validation and error handling
+   - HTTP client for Python service integration
+   - Stateless operation without persistence
 
 3. **Exception Handling**: Centralized error management
    - Global exception handler for consistent responses
@@ -217,122 +199,56 @@ app/
 
 ## Data Flow & Communication
 
-### Complete Transcription Workflow
+### Simplified Direct Transcription Workflow
 
 ```
-1. File Upload Flow
-   ┌─────────────┐    POST /api/audio/upload    ┌─────────────┐
-   │   React     │──────────────────────────────►│ Spring Boot │
-   │  Frontend   │◄──────────────────────────────│     API     │
-   └─────────────┘    AudioUploadResponse       └─────────────┘
-                           (jobId)                       │
-                                                         │ Store job
-                                                         ▼
-                                                ┌─────────────┐
-                                                │ PostgreSQL  │
-                                                │  Database   │
-                                                └─────────────┘
-
-2. Status Polling Flow
-   ┌─────────────┐   GET /api/audio/status/{id}  ┌─────────────┐
-   │   React     │──────────────────────────────►│ Spring Boot │
-   │  Frontend   │◄──────────────────────────────│     API     │
-   └─────────────┘  TranscriptionStatusResponse  └─────────────┘
-        │                                                │
-        │ Poll every 2s                                  │ Query status
-        │ until complete                                 ▼
-        │                                       ┌─────────────┐
-        └───────────────────────────────────────│ PostgreSQL  │
-                                                │  Database   │
-                                                └─────────────┘
-
-3. Transcription Processing Flow
-   ┌─────────────┐    HTTP POST /transcribe     ┌─────────────┐
-   │ Spring Boot │──────────────────────────────►│   Python    │
-   │     API     │◄──────────────────────────────│   Service   │
-   └─────────────┘   TranscriptionResponse      └─────────────┘
-        │                                                │
-        │ Store results                                  │ Process with
-        ▼                                                │ Whisper
-   ┌─────────────┐                                      ▼
-   │ PostgreSQL  │                              ┌─────────────┐
-   │  Database   │                              │   Whisper   │
-   └─────────────┘                              │   Models    │
-                                                └─────────────┘
-
-4. Results Retrieval Flow
-   ┌─────────────┐   GET /api/audio/result/{id}  ┌─────────────┐
-   │   React     │──────────────────────────────►│ Spring Boot │
-   │  Frontend   │◄──────────────────────────────│     API     │
-   └─────────────┘  TranscriptionResultResponse  └─────────────┘
-                                                         │
-                                                         │ Fetch results
-                                                         ▼
-                                                ┌─────────────┐
-                                                │ PostgreSQL  │
-                                                │  Database   │
-                                                └─────────────┘
+Direct Transcription Flow (No Database, No Polling)
+┌─────────────┐  POST /api/audio/transcribe  ┌─────────────┐  POST /transcribe  ┌─────────────┐
+│   React     │─────────────────────────────►│ Spring Boot │───────────────────►│   Python    │
+│  Frontend   │                              │     API     │                    │   Service   │
+│             │                              │  (Proxy)    │                    │             │
+│             │                              │             │                    │             │
+│             │  TranscriptionResultResponse │             │ TranscriptionResp  │             │
+│             │◄─────────────────────────────│             │◄───────────────────│             │
+└─────────────┘                              └─────────────┘                    └─────────────┘
+      │                                            │                                    │
+      │                                            │                                    │
+      │ Instant Results                            │ Validation &                       │ Process with
+      │ No Polling                                 │ Error Handling                     │ Whisper
+      ▼                                            ▼                                    ▼
+┌─────────────┐                                   │                            ┌─────────────┐
+│ User sees   │                                   │                            │   Whisper   │
+│ results     │                          No Database Required                  │   Models    │
+│ immediately │                                   │                            └─────────────┘
+└─────────────┘                                   ▼
+                                         Stateless Operation
 ```
 
-### Database Schema Relationships
+### Stateless Architecture Benefits
 
-```sql
--- Core entity relationships
-Users (1) ──── (N) AudioFiles
-AudioFiles (1) ──── (N) Jobs  
-Jobs (1) ──── (1) Transcriptions
+```
+No Database Required - Direct Processing Benefits:
 
--- Detailed schema
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    role VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE audio_files (
-    id BIGSERIAL PRIMARY KEY,
-    filename VARCHAR(255) NOT NULL,
-    original_filename VARCHAR(255) NOT NULL,
-    file_size BIGINT NOT NULL,
-    duration DOUBLE PRECISION,
-    format VARCHAR(10) NOT NULL,
-    s3_key VARCHAR(500),
-    checksum VARCHAR(32),
-    uploaded_by BIGINT REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE jobs (
-    id BIGSERIAL PRIMARY KEY,
-    job_id UUID UNIQUE NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    priority INTEGER DEFAULT 0,
-    started_at TIMESTAMP,
-    completed_at TIMESTAMP,
-    error_message TEXT,
-    processing_time_ms BIGINT,
-    model_used VARCHAR(50),
-    requested_by BIGINT REFERENCES users(id),
-    audio_file_id BIGINT REFERENCES audio_files(id),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE transcriptions (
-    id BIGSERIAL PRIMARY KEY,
-    text TEXT NOT NULL,
-    language VARCHAR(10),
-    confidence DECIMAL(3,2),
-    duration DOUBLE PRECISION,
-    segments_json TEXT,
-    job_id BIGINT REFERENCES jobs(id) UNIQUE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+┌─────────────────────────────────────────────────────────────────┐
+│                     Simplified Benefits                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ✅ Instant Results        ✅ No Setup Complexity              │
+│  • No polling required    • No database installation           │
+│  • Immediate feedback     • No migration management            │
+│  • Real-time processing   • No connection configuration        │
+│                                                                 │
+│  ✅ Reduced Overhead      ✅ Simplified Deployment             │
+│  • No database queries    • Fewer moving parts                 │
+│  • No connection pools    • Easier containerization            │
+│  • No transaction mgmt    • Reduced resource requirements      │
+│                                                                 │
+│  ✅ Better Performance    ✅ Enhanced Reliability              │
+│  • Lower latency          • No database failures               │
+│  • Direct communication   • No connection timeouts            │
+│  • Reduced memory usage   • Simplified error handling          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -352,9 +268,7 @@ CREATE TABLE transcriptions (
 ### Backend Stack
 - **Spring Boot 3**: Modern Java framework with auto-configuration
 - **Java 21**: Latest LTS version with modern language features
-- **Spring Data JPA**: Object-relational mapping and data access
-- **PostgreSQL**: Robust relational database with JSON support
-- **Flyway**: Database migration and version control
+- **Spring Web**: RESTful web services and HTTP client
 - **Spring Boot Actuator**: Production monitoring and health checks
 - **Maven**: Dependency management and build automation
 
@@ -369,7 +283,6 @@ CREATE TABLE transcriptions (
 ### Infrastructure & DevOps
 - **Docker**: Containerization for consistent deployments
 - **Docker Compose**: Multi-container application orchestration
-- **PostgreSQL 16**: Database with advanced features and performance
 - **Nginx**: Reverse proxy and static file serving (production)
 
 ---
@@ -378,86 +291,23 @@ CREATE TABLE transcriptions (
 
 ### Getting Started (Step-by-Step)
 
-#### 1. Environment Setup
+#### 1. Quick Start with Docker Compose
+
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd Whisperrr
 
-# Verify prerequisites
-java --version    # Should be 21+
-node --version    # Should be 18+
-python --version  # Should be 3.11+
-docker --version  # For containerized setup
-```
+# Start all services
+docker compose up -d
 
-#### 2. Database Setup
-```bash
-# Install PostgreSQL (if not using Docker)
-# macOS
-brew install postgresql
-brew services start postgresql
+# Verify services are running
+docker compose ps
 
-# Create database
-createdb transcription_db
-
-# Create user (optional)
-psql -c "CREATE USER transcription_user WITH PASSWORD 'transcription_pass';"
-psql -c "GRANT ALL PRIVILEGES ON DATABASE transcription_db TO transcription_user;"
-```
-
-#### 3. Backend Setup (Spring Boot)
-```bash
-cd backend
-
-# Configure database connection
-# Edit src/main/resources/application.properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/transcription_db
-spring.datasource.username=transcription_user
-spring.datasource.password=transcription_pass
-
-# Build and run
-./mvnw spring-boot:run
-
-# Verify: http://localhost:8080/actuator/health
-```
-
-#### 4. Python Service Setup
-```bash
-cd python-service
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment (copy env.example to .env)
-cp env.example .env
-# Edit .env as needed
-
-# Run service
-python -m app.main
-
-# Verify: http://localhost:8000/health
-```
-
-#### 5. Frontend Setup
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Configure environment (copy env.example to .env)
-cp env.example .env
-# Edit .env as needed
-
-# Start development server
-npm start
-
-# Verify: http://localhost:3000
+# Access the application
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8080
+# Python Service: http://localhost:8000
 ```
 
 ### Development Best Practices
@@ -497,36 +347,37 @@ python -m pytest
 ### Development Environment
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Development Setup                          │
+│                  Docker Compose Development Setup              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │ npm start       │    │ ./mvnw spring-  │    │ python -m   │ │
-│  │ localhost:3000  │    │ boot:run        │    │ app.main    │ │
-│  │                 │    │ localhost:8080  │    │ localhost:  │ │
-│  │ Hot reload      │    │                 │    │ 8000        │ │
-│  │ enabled         │    │ Auto restart    │    │             │ │
+│  │ Frontend        │    │ Backend         │    │ Python      │ │
+│  │ localhost:3000   │    │ localhost:8080  │    │ Service     │ │
+│  │                 │    │                 │    │ localhost:  │ │
+│  │ Hot reload      │    │ Auto restart    │    │ 8000        │ │
+│  │ enabled         │    │ enabled         │    │             │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │                                                                 │
-│                    ┌─────────────────┐                         │
-│                    │ PostgreSQL      │                         │
-│                    │ localhost:5432  │                         │
-│                    │                 │                         │
-│                    │ Local instance  │                         │
-│                    └─────────────────┘                         │
+│                    docker compose up -d                        │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Docker Compose Setup
 ```bash
-# Start all services with Docker
-docker-compose up --build
+# Start all services with Docker Compose v2
+docker compose up -d
 
 # Services will be available at:
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8080
 # Python Service: http://localhost:8000
-# PostgreSQL: localhost:5432
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
 ```
 
 ### Production Deployment Options
@@ -655,24 +506,29 @@ docker-compose up --build
 
 ## Key Concepts
 
-### Job Lifecycle Management
+### Direct Transcription Processing
 
-The transcription workflow is built around a job-based system that tracks the complete lifecycle of each transcription request:
+The transcription workflow is simplified to provide instant results without job management:
 
 ```
-Job States:
-PENDING → PROCESSING → COMPLETED
-    ↓         ↓           ↑
-    ↓    FAILED ←────────┘
-    ↓         ↓
-    └→ CANCELLED ←───────┘
+Direct Processing Flow:
+UPLOAD → VALIDATE → TRANSCRIBE → RETURN RESULTS
+   │         │           │            │
+   │         │           │            └─ Immediate response
+   │         │           └─ Python service processing
+   │         └─ File format and size validation
+   └─ Multipart file upload
 
-State Transitions:
-1. PENDING: Job created, waiting for processing
-2. PROCESSING: Whisper model actively transcribing
-3. COMPLETED: Transcription finished successfully
-4. FAILED: Error occurred during processing
-5. CANCELLED: Job cancelled by user or system
+Simplified States:
+1. PROCESSING: File being transcribed (brief moment)
+2. COMPLETED: Transcription finished with results
+3. FAILED: Error occurred during processing
+
+Benefits:
+• No polling required
+• Instant feedback
+• Simplified state management
+• Reduced complexity
 ```
 
 ### Error Handling Strategy
@@ -744,31 +600,14 @@ The platform implements comprehensive error handling at every layer:
 
 #### Development Setup Issues
 
-**Issue**: Database connection failed
+**Issue**: Services fail to start
 ```
 Solution:
-1. Verify PostgreSQL is running: `brew services list | grep postgresql`
-2. Check database exists: `psql -l | grep transcription_db`
-3. Verify credentials in application.properties
-4. Check firewall/network connectivity
-```
-
-**Issue**: Python service fails to start
-```
-Solution:
-1. Verify Python version: `python --version` (should be 3.11+)
-2. Check virtual environment: `which python` (should point to venv)
-3. Install dependencies: `pip install -r requirements.txt`
-4. Check for conflicting processes on port 8000
-```
-
-**Issue**: Frontend build fails
-```
-Solution:
-1. Clear node_modules: `rm -rf node_modules package-lock.json`
-2. Reinstall dependencies: `npm install`
-3. Check Node.js version: `node --version` (should be 18+)
-4. Verify environment variables in .env file
+1. Check Docker is running: `docker --version`
+2. Verify Docker Compose v2: `docker compose version`
+3. Rebuild containers: `docker compose up -d --build`
+4. Check logs: `docker compose logs -f`
+5. Verify port availability: `docker compose ps`
 ```
 
 #### Runtime Issues
@@ -782,13 +621,14 @@ Solution:
 4. Check browser developer tools for specific CORS error
 ```
 
-**Issue**: Transcription jobs stuck in PROCESSING
+**Issue**: Transcription requests failing or timing out
 ```
 Solution:
 1. Check Python service logs for errors
 2. Verify Whisper model is loaded: GET /model/info
 3. Check available memory and CPU resources
-4. Restart Python service if needed
+4. Verify backend can reach Python service
+5. Restart Python service if needed
 ```
 
 **Issue**: File upload fails with 413 error
@@ -869,19 +709,16 @@ cProfile.run('your_function()')
 - Frontend: Application runs on http://localhost:3000
 - Backend: http://localhost:8080/actuator/health
 - Python Service: http://localhost:8000/health
-- Database: `pg_isready -h localhost -p 5432`
 
 #### Log Locations
 - Backend: Console output or configured log file
 - Python Service: Console output with structured logging
 - Frontend: Browser developer tools console
-- Database: PostgreSQL log directory
 
 #### Metrics and Monitoring
 - Backend: Spring Boot Actuator metrics at `/actuator/metrics`
 - Python Service: Custom metrics in logs and responses
 - Frontend: React Query devtools for cache and network state
-- Database: PostgreSQL statistics and query performance
 
 ---
 

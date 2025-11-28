@@ -12,9 +12,7 @@
  *   - Supports dark mode theming
  * 
  * Route Structure:
- *   - / (HomePage): File upload and transcription initiation
- *   - /status/:jobId (StatusPage): Real-time transcription progress
- *   - /results/:jobId (ResultsPage): Completed transcription results
+ *   - / (HomePage): File upload and instant transcription results
  *   - Catch-all redirect to home for invalid routes
  * 
  * Design System:
@@ -43,8 +41,6 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { HomePage } from './pages/HomePage';
-import { StatusPage } from './pages/StatusPage';
-import { ResultsPage } from './pages/ResultsPage';
 import './App.css';
 
 /**
@@ -93,8 +89,6 @@ function App() {
           <main className="max-w-4xl mx-auto">
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/status/:jobId" element={<StatusPage />} />
-              <Route path="/results/:jobId" element={<ResultsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
