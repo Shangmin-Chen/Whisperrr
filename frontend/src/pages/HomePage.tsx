@@ -101,7 +101,7 @@ export const HomePage: React.FC = () => {
           </div>
           
           {/* Results Display */}
-          <ResultsView transcriptionResult={transcriptionResult} />
+          <ResultsView result={transcriptionResult} />
         </div>
       ) : (
         <>

@@ -14,7 +14,6 @@
  * 
  * Configuration Sources:
  *   - REACT_APP_API_URL: Backend API base URL (default: http://localhost:8080/api)
- *   - REACT_APP_POLLING_INTERVAL: Status polling interval in ms (default: 2000)
  *   - Environment variables override defaults for different deployments
  * 
  * Network Configuration:
@@ -28,8 +27,7 @@
  *   import apiClient from './api';
  *   
  *   // Make API calls
- *   const response = await apiClient.post('/audio/upload', formData);
- *   const status = await apiClient.get(`/audio/status/${jobId}`);
+ *   const response = await apiClient.post('/audio/transcribe', formData);
  *   ```
  * 
  * Error Handling:
@@ -57,8 +55,6 @@ export const API_CONFIG = {
   baseURL: (process.env as any).REACT_APP_API_URL || 'http://localhost:8080/api',
   /** Request timeout in milliseconds */
   timeout: 30000,
-  /** Polling interval for status updates in milliseconds */
-  pollingInterval: parseInt((process.env as any).REACT_APP_POLLING_INTERVAL || '2000')
 };
 
 /**

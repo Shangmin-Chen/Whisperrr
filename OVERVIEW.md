@@ -94,12 +94,9 @@ src/
 │   └── results/         # Results display components
 ├── hooks/               # Custom React hooks
 │   ├── useFileUpload.ts    # File upload state management
-│   ├── useTranscription.ts # Transcription workflow management
-│   └── usePolling.ts       # Real-time status polling
+│   └── useTranscription.ts # Transcription workflow management
 ├── pages/               # Route-level page components
-│   ├── HomePage.tsx        # File upload and initiation
-│   ├── StatusPage.tsx      # Progress monitoring
-│   └── ResultsPage.tsx     # Results display and export
+│   └── HomePage.tsx        # File upload, processing, and results display
 ├── services/            # API communication layer
 │   ├── api.ts             # HTTP client configuration
 │   └── transcription.ts   # Transcription API calls
@@ -113,7 +110,6 @@ src/
 1. **Custom Hooks Pattern**: Encapsulates complex state logic
    - `useTranscription`: Manages entire transcription workflow
    - `useFileUpload`: Handles file selection and validation
-   - `usePolling`: Implements smart polling with backoff
 
 2. **Service Layer Pattern**: Separates API logic from components
    - Centralized HTTP client configuration
@@ -137,7 +133,7 @@ src/main/java/com/shangmin/whisperrr/
 │   ├── TranscriptionResultResponse.java
 │   └── ErrorResponse.java
 ├── enums/               # Enumeration types
-│   ├── JobStatus.java      # Transcription status states
+│   ├── TranscriptionStatus.java  # Simplified transcription status (COMPLETED/FAILED)
 │   └── AudioFormat.java    # Supported audio formats
 ├── exception/           # Error handling
 │   ├── GlobalExceptionHandler.java
@@ -395,13 +391,8 @@ docker compose down
 │  │                 │    │  Run)           │    │  Cloud Run) │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │                                                                 │
-│                    ┌─────────────────┐                         │
-│                    │ Managed         │                         │
-│                    │ PostgreSQL      │                         │
-│                    │ (AWS RDS/       │                         │
-│                    │  Google Cloud   │                         │
-│                    │  SQL)           │                         │
-│                    └─────────────────┘                         │
+│                    Stateless - No Database Required            │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -419,13 +410,8 @@ docker compose down
 │  │ Replicas: 2-3   │    │ Replicas: 2-5   │    │ Replicas: 1-3│ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │                                                                 │
-│                    ┌─────────────────┐                         │
-│                    │ PostgreSQL      │                         │
-│                    │ StatefulSet     │                         │
-│                    │                 │                         │
-│                    │ Persistent      │                         │
-│                    │ Volume          │                         │
-│                    └─────────────────┘                         │
+│                    Stateless - No Database Required            │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -449,7 +435,7 @@ docker compose down
 
 #### Phase 3: Backend Deep Dive (Week 3)
 1. **Study the Spring Boot structure** - Understand the layered architecture
-2. **Explore the entities and relationships** - See how data is modeled
+2. **Explore the DTOs and data flow** - See how data is transferred between services
 3. **Understand the service layer** - Focus on business logic implementation
 4. **Learn about error handling** - Study the exception handling patterns
 
@@ -471,7 +457,7 @@ docker compose down
 1. `WhisperrrApiApplication.java` - Application entry point
 2. `AudioController.java` - REST API endpoints
 3. `AudioServiceImpl.java` - Business logic implementation
-4. `Job.java` - Core domain entity
+4. `TranscriptionResultResponse.java` - Response DTO
 
 #### Python Service Entry Points
 1. `app/main.py` - FastAPI application and endpoints
@@ -488,12 +474,12 @@ docker compose down
 4. **Add frontend service method** in `transcription.ts`
 5. **Update React components** to use the new endpoint
 
-#### Adding a New Database Entity
-1. **Create JPA entity** in `entity/` package
-2. **Create repository interface** in `repository/` package
-3. **Add Flyway migration** in `src/main/resources/db/migration/`
-4. **Update service layer** to use new entity
-5. **Create DTOs** for API communication
+#### Adding a New Feature
+1. **Add endpoint** in `AudioController.java`
+2. **Add business logic** in `AudioService` interface and implementation
+3. **Create DTOs** for request/response if needed
+4. **Update frontend service** in `transcription.ts`
+5. **Update React components** to use the new feature
 
 #### Adding New Whisper Model Support
 1. **Update configuration** in `config.py`
@@ -545,7 +531,7 @@ The platform implements comprehensive error handling at every layer:
 - **Global exception handler**: Consistent error response format
 - **Custom exceptions**: Specific error types for different scenarios
 - **Validation errors**: Bean validation with detailed messages
-- **Database errors**: Transaction rollback and recovery
+- **Service errors**: Proper error propagation and logging
 
 #### Python Service Error Handling
 - **Custom exception hierarchy**: Specific error types for different failures
@@ -562,10 +548,10 @@ The platform implements comprehensive error handling at every layer:
 - **Asset optimization**: Minification and compression
 
 #### Backend Optimizations
-- **Connection pooling**: Efficient database connection management
-- **JPA optimization**: Proper fetch strategies and query optimization
-- **Caching**: Strategic caching of frequently accessed data
+- **HTTP client pooling**: Efficient connection management for Python service
 - **Async processing**: Non-blocking operations where appropriate
+- **Caching**: Strategic caching of responses when applicable
+- **Resource management**: Proper cleanup and connection handling
 
 #### Python Service Optimizations
 - **Model caching**: Avoid repeated model loading

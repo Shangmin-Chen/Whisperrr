@@ -5,10 +5,10 @@
  * workflow, including API request/response types and domain models. The types
  * are designed for instant transcription without job queuing or polling.
  * 
- * Key Changes from Previous Version:
- *   - Removed job-based types (AudioUploadResponse, TranscriptionStatusResponse)
- *   - Simplified TranscriptionResultResponse for direct results
- *   - Streamlined TranscriptionResult interface
+ * Key Features:
+ *   - Direct transcription results without job queuing
+ *   - Simplified TranscriptionResultResponse for instant results
+ *   - Type-safe API communication
  *   - Maintained compatibility with backend API
  * 
  * @author shangmin
@@ -72,8 +72,8 @@ export interface TranscriptionSegment {
 /**
  * Enumeration of possible transcription statuses.
  * 
- * In the simplified system, most responses will have COMPLETED status,
- * but FAILED is used for error cases.
+ * In the simplified system, responses will have COMPLETED status for successful
+ * transcriptions, or FAILED for error cases.
  */
 export enum TranscriptionStatus {
   /** Transcription completed successfully */

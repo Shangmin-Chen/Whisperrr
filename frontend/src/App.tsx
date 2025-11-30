@@ -60,9 +60,9 @@ import './App.css';
  * 
  * Routing Strategy:
  *   - Declarative routing with React Router
- *   - Protected routes for job-specific pages
+ *   - Single-page application with instant results
  *   - Automatic redirect for invalid URLs
- *   - URL-based state management for deep linking
+ *   - Simplified navigation without job-specific routes
  * 
  * Styling Approach:
  *   - Utility-first CSS with Tailwind

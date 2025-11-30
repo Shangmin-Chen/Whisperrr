@@ -1,8 +1,6 @@
 package com.shangmin.whisperrr.service;
 
-import com.shangmin.whisperrr.dto.AudioUploadResponse;
 import com.shangmin.whisperrr.dto.TranscriptionResultResponse;
-import com.shangmin.whisperrr.dto.TranscriptionStatusResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

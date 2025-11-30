@@ -34,8 +34,7 @@ Processing Flow:
 Integration:
     This service is designed to work with the Spring Boot backend:
     - Backend forwards transcription requests to this service
-    - Results are returned to backend for database storage
-    - Status updates are managed by the backend API
+    - Results are returned to backend for immediate response to client
     - CORS is configured to accept requests from backend
 
 Performance Considerations:

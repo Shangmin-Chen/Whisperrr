@@ -29,21 +29,10 @@ export const APP_CONFIG = {
     'audio/wma',
   ],
   supportedExtensions: ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.wma'],
-  pollingInterval: 2000, // 2 seconds
-  maxPollingAttempts: 300, // 10 minutes max
 };
 
 export const ROUTES = {
   HOME: '/',
-  STATUS: '/status',
-  RESULTS: '/results',
-} as const;
-
-export const TRANSCRIPTION_STATUS = {
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
 } as const;
 
 export const ERROR_MESSAGES = {

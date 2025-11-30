@@ -8,9 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
+import java.util.ConcurrentModificationException;
 
 /**
  * Global exception handler for the application
@@ -29,17 +33,6 @@ public class GlobalExceptionHandler {
             LocalDateTime.now()
         );
         return ResponseEntity.badRequest().body(error);
-    }
-    
-    @ExceptionHandler(TranscriptionNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleTranscriptionNotFoundException(TranscriptionNotFoundException ex) {
-        logger.warn("Transcription not found: {}", ex.getMessage());
-        ErrorResponse error = new ErrorResponse(
-            "TRANSCRIPTION_NOT_FOUND",
-            ex.getMessage(),
-            LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
     
     @ExceptionHandler(TranscriptionProcessingException.class)
@@ -80,26 +73,37 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
     }
     
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
-        logger.warn("Entity not found: {}", ex.getMessage());
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAccessException(ResourceAccessException ex) {
+        logger.error("Failed to access transcription service: {}", ex.getMessage(), ex);
         ErrorResponse error = new ErrorResponse(
-            "ENTITY_NOT_FOUND",
-            ex.getMessage(),
+            "SERVICE_UNAVAILABLE",
+            "Transcription service is currently unavailable. Please try again later.",
             LocalDateTime.now()
         );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
     
-    @ExceptionHandler(DuplicateEntityException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateEntityException(DuplicateEntityException ex) {
-        logger.warn("Duplicate entity: {}", ex.getMessage());
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<ErrorResponse> handleHttpClientErrorException(HttpClientErrorException ex) {
+        logger.warn("Client error from transcription service ({}): {}", ex.getStatusCode(), ex.getMessage());
         ErrorResponse error = new ErrorResponse(
-            "DUPLICATE_ENTITY",
-            ex.getMessage(),
+            "TRANSCRIPTION_SERVICE_ERROR",
+            "Transcription service returned an error: " + ex.getMessage(),
             LocalDateTime.now()
         );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+    
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ResponseEntity<ErrorResponse> handleHttpServerErrorException(HttpServerErrorException ex) {
+        logger.error("Server error from transcription service ({}): {}", ex.getStatusCode(), ex.getMessage(), ex);
+        ErrorResponse error = new ErrorResponse(
+            "TRANSCRIPTION_SERVICE_ERROR",
+            "Transcription service encountered an error. Please try again later.",
+            LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(error);
     }
     
     @ExceptionHandler(ConcurrentModificationException.class)
@@ -111,17 +115,6 @@ public class GlobalExceptionHandler {
             LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-    
-    @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<ErrorResponse> handleDatabaseException(DatabaseException ex) {
-        logger.error("Database error: {}", ex.getMessage(), ex);
-        ErrorResponse error = new ErrorResponse(
-            "DATABASE_ERROR",
-            "A database error occurred",
-            LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
     
     @ExceptionHandler(Exception.class)

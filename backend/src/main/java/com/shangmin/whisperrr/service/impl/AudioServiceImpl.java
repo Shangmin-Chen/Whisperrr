@@ -12,6 +12,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import jakarta.annotation.PostConstruct;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -70,7 +75,7 @@ public class AudioServiceImpl implements AudioService {
     
     private static final Logger logger = LoggerFactory.getLogger(AudioServiceImpl.class);
     
-    private final RestTemplate restTemplate;
+    private RestTemplate restTemplate;
     
     @Value("${whisperrr.service.url}")
     private String pythonServiceUrl;
@@ -83,10 +88,15 @@ public class AudioServiceImpl implements AudioService {
     private static final long MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
     
     /**
-     * Constructor that initializes the REST template for Python service communication.
+     * Initialize the REST template for Python service communication
+     * with configured timeout settings after dependency injection.
      */
-    public AudioServiceImpl() {
-        this.restTemplate = new RestTemplate();
+    @PostConstruct
+    public void initRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000); // 5 seconds connection timeout
+        factory.setReadTimeout(serviceTimeout); // Use configured timeout for read operations
+        this.restTemplate = new RestTemplate(factory);
     }
     
     @Override
@@ -129,16 +139,21 @@ public class AudioServiceImpl implements AudioService {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> result = response.getBody();
                 
-                // Extract transcription data from Python service response
-                String transcriptionText = (String) result.get("text");
-                String language = (String) result.get("language");
+                // Extract transcription data from Python service response with null safety
+                String transcriptionText = result.get("text") != null ? (String) result.get("text") : "";
+                String language = result.get("language") != null ? (String) result.get("language") : "unknown";
                 Double confidence = result.get("confidence_score") != null ? 
                     ((Number) result.get("confidence_score")).doubleValue() : null;
                 Double duration = result.get("duration") != null ? 
                     ((Number) result.get("duration")).doubleValue() : null;
-                String modelUsed = (String) result.get("model_used");
+                String modelUsed = result.get("model_used") != null ? (String) result.get("model_used") : "unknown";
                 Double processingTime = result.get("processing_time") != null ? 
                     ((Number) result.get("processing_time")).doubleValue() : null;
+                
+                // Validate that we have at least transcription text
+                if (transcriptionText == null || transcriptionText.isEmpty()) {
+                    throw new TranscriptionProcessingException("Python service returned empty transcription result");
+                }
                 
                 logger.info("Transcription completed successfully for file: {}", audioFile.getOriginalFilename());
                 
@@ -155,12 +170,25 @@ public class AudioServiceImpl implements AudioService {
                 
                 return resultResponse;
             } else {
-                throw new TranscriptionProcessingException("Python service returned unexpected response");
+                throw new TranscriptionProcessingException("Python service returned unexpected response: " + 
+                    (response.getStatusCode() != null ? response.getStatusCode() : "null status"));
             }
             
+        } catch (ResourceAccessException e) {
+            logger.error("Failed to connect to Python transcription service: {}", e.getMessage(), e);
+            throw new TranscriptionProcessingException("Transcription service is unavailable: " + e.getMessage(), e);
+        } catch (HttpClientErrorException e) {
+            logger.error("Python service returned client error ({}): {}", e.getStatusCode(), e.getMessage(), e);
+            throw new TranscriptionProcessingException("Transcription service client error: " + e.getMessage(), e);
+        } catch (HttpServerErrorException e) {
+            logger.error("Python service returned server error ({}): {}", e.getStatusCode(), e.getMessage(), e);
+            throw new TranscriptionProcessingException("Transcription service server error: " + e.getMessage(), e);
+        } catch (TranscriptionProcessingException e) {
+            // Re-throw processing exceptions as-is
+            throw e;
         } catch (Exception e) {
             logger.error("Transcription failed for file: {}", audioFile.getOriginalFilename(), e);
-            throw new TranscriptionProcessingException("Transcription processing failed: " + e.getMessage());
+            throw new TranscriptionProcessingException("Transcription processing failed: " + e.getMessage(), e);
         }
     }
     
