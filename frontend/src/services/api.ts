@@ -13,7 +13,7 @@
  *   - Centralized error handling and logging
  * 
  * Configuration Sources:
- *   - REACT_APP_API_URL: Backend API base URL (default: http://localhost:8080/api)
+ *   - REACT_APP_API_URL: Backend API base URL (default: http://localhost:7331/api)
  *   - Environment variables override defaults for different deployments
  * 
  * Network Configuration:

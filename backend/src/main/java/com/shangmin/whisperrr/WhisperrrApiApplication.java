@@ -71,7 +71,7 @@ public class WhisperrrApiApplication {
 	 * 
 	 * <p>This method initializes the Spring application context, sets up all
 	 * configured beans, starts the embedded Tomcat server, and begins listening
-	 * for HTTP requests on the configured port (default: 8080).</p>
+	 * for HTTP requests on the configured port (default: 7331).</p>
 	 * 
 	 * <p>The application will automatically:</p>
 	 * <ul>
@@ -87,10 +87,10 @@ public class WhisperrrApiApplication {
 	 * 
 	 * @param args command line arguments passed to the application
 	 *             Common arguments include:
-	 *             --server.port=8080 (change server port)
+	 *             --server.port=7331 (change server port)
 	 *             --spring.profiles.active=dev (activate dev profile)
 	 *             --logging.level.com.shangmin.whisperrr=DEBUG (enable debug logging)
-	 *             --whisperrr.service.url=http://localhost:8000 (Python service URL)
+	 *             --whisperrr.service.url=http://localhost:5001 (Python service URL)
 	 */
 	public static void main(String[] args) {
 		SpringApplication.run(WhisperrrApiApplication.class, args);

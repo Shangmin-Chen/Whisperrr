@@ -47,3 +47,4 @@ public final class AppConfig {
         // Utility class - prevent instantiation
     }
 }
+

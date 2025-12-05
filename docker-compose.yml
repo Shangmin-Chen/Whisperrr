@@ -7,10 +7,10 @@ services:
     environment:
       - MODEL_SIZE=base
       - MAX_FILE_SIZE_MB=1000
-      - CORS_ORIGINS=http://localhost:8080,http://localhost:3000
+      - CORS_ORIGINS=http://localhost:7331,http://localhost:3737
       - LOG_LEVEL=INFO
     ports:
-      - "8000:8000"
+      - "5001:5001"
     volumes:
       - ./python-service/app:/app/app
     networks:
@@ -30,10 +30,10 @@ services:
       dockerfile: Dockerfile
     container_name: whisperrr-backend
     environment:
-      - WHISPERRR_SERVICE_URL=http://python-service:8000
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+      - WHISPERRR_SERVICE_URL=http://python-service:5001
+      - CORS_ALLOWED_ORIGINS=http://localhost:3737,http://localhost:3738
     ports:
-      - "8080:8080"
+      - "7331:7331"
     volumes:
       - ./backend/src:/app/src
     networks:
@@ -56,9 +56,9 @@ services:
       target: development
     container_name: whisperrr-frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8080/api
+      - REACT_APP_API_URL=http://localhost:7331/api
     ports:
-      - "3000:3000"
+      - "3737:3737"
     volumes:
       - ./frontend/src:/app/src
     networks:

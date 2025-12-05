@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     api_title: str = "Whisperrr Transcription Service"
     api_description: str = "Production-ready audio transcription using Faster Whisper"
     api_version: str = "1.0.0"
-    cors_origins: Union[List[str], str] = ["http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:8080", "http://127.0.0.1:3000"]
+    cors_origins: Union[List[str], str] = ["http://localhost:7331", "http://localhost:3737", "http://127.0.0.1:7331", "http://127.0.0.1:3737"]
     
     # Processing configuration
     max_concurrent_transcriptions: int = 3
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     
     # Server configuration (for development)
     server_host: str = "0.0.0.0"
-    server_port: int = 8000
+    server_port: int = 5001
     server_reload: bool = True  # Auto-reload for development
     
     # Model descriptions

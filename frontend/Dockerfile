@@ -39,7 +39,7 @@ COPY postcss.config.js ./
 COPY public ./public
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3737
 
 # Start development server
 CMD ["npm", "start"]
@@ -54,11 +54,11 @@ COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3737
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
+  CMD curl -f http://localhost:3737 || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

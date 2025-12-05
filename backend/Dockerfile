@@ -30,7 +30,7 @@ COPY --from=build /app/target/*.jar app.jar
 RUN chown appuser:appgroup app.jar
 
 # Expose port
-EXPOSE 8080
+EXPOSE 7331
 
 # Install curl for health check
 RUN apk add --no-cache curl
@@ -40,7 +40,7 @@ ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD curl -f http://localhost:7331/actuator/health || exit 1
 
 # Switch to non-root user
 USER appuser

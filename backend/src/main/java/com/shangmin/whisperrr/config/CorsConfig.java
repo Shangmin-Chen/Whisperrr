@@ -23,8 +23,8 @@ import java.util.List;
  * <h3>CORS Configuration Overview:</h3>
  * <p>The Whisperrr application requires CORS configuration because:</p>
  * <ul>
- *   <li><strong>Frontend:</strong> React app running on http://localhost:3000 (development)</li>
- *   <li><strong>Backend:</strong> Spring Boot API running on http://localhost:8080</li>
+ *   <li><strong>Frontend:</strong> React app running on http://localhost:3737 (development)</li>
+ *   <li><strong>Backend:</strong> Spring Boot API running on http://localhost:7331</li>
  *   <li><strong>Production:</strong> Frontend and backend may be on different domains</li>
  * </ul>
  * 
@@ -108,7 +108,7 @@ public class CorsConfig implements WebMvcConfigurer {
      * 
      * <h4>Configuration Properties Used:</h4>
      * <ul>
-     *   <li><strong>cors.allowed-origins:</strong> Frontend URLs (e.g., "http://localhost:3000,https://myapp.com")</li>
+     *   <li><strong>cors.allowed-origins:</strong> Frontend URLs (e.g., "http://localhost:3737,https://myapp.com")</li>
      *   <li><strong>cors.allowed-methods:</strong> HTTP methods (e.g., "GET,POST,PUT,DELETE,OPTIONS")</li>
      *   <li><strong>cors.allowed-headers:</strong> Request headers (e.g., "*" or specific headers)</li>
      *   <li><strong>cors.allow-credentials:</strong> Cookie/auth support (true/false)</li>

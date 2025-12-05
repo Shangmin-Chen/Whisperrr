@@ -51,7 +51,7 @@ class AudioServiceImplTest {
     @Mock
     private MultipartFile mockFile;
 
-    private static final String PYTHON_SERVICE_URL = "http://localhost:8000";
+    private static final String PYTHON_SERVICE_URL = "http://localhost:5001";
     private static final byte[] VALID_AUDIO_CONTENT = "fake audio content".getBytes();
 
     @BeforeEach

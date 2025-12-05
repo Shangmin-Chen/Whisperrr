@@ -85,7 +85,7 @@ export const TRANSCRIPTION_CONFIG = {
  */
 export const API_CONFIG = {
   /** Default API base URL. */
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:7331/api',
   
   /** Request timeout in milliseconds (0 = no timeout for long-running jobs). */
   TIMEOUT: 0,
