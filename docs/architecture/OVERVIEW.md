@@ -27,8 +27,8 @@ Whisperrr is a simplified, lightweight audio transcription platform that leverag
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
 │  │                 │    │                 │    │             │ │
 │  │  React Frontend │◄──►│ Spring Boot API │◄──►│   Python    │ │
-│  │   (Port 3000)   │    │   (Port 8080)   │    │  Service    │ │
-│  │                 │    │                 │    │ (Port 8000) │ │
+│  │   (Port 3737)   │    │   (Port 7331)   │    │  Service    │ │
+│  │                 │    │                 │    │ (Port 5001) │ │
 │  │  • File Upload  │    │ • Validation    │    │ • Whisper AI│ │
 │  │  • Instant UI   │    │ • Proxy/Relay   │    │ • Direct    │ │
 │  │  • Results View │    │ • Error Handle  │    │   Processing│ │
@@ -301,9 +301,9 @@ docker compose up -d
 docker compose ps
 
 # Access the application
-# Frontend: http://localhost:3000
-# Backend: http://localhost:8080
-# Python Service: http://localhost:8000
+# Frontend: http://localhost:3737
+# Backend: http://localhost:7331
+# Python Service: http://localhost:5001
 ```
 
 ### Development Best Practices
@@ -348,9 +348,9 @@ python -m pytest
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
 │  │ Frontend        │    │ Backend         │    │ Python      │ │
-│  │ localhost:3000   │    │ localhost:8080  │    │ Service     │ │
+│  │ localhost:3737   │    │ localhost:7331  │    │ Service     │ │
 │  │                 │    │                 │    │ localhost:  │ │
-│  │ Hot reload      │    │ Auto restart    │    │ 8000        │ │
+│  │ Hot reload      │    │ Auto restart    │    │ 5001        │ │
 │  │ enabled         │    │ enabled         │    │             │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │                                                                 │
@@ -424,7 +424,7 @@ docker compose down
 #### Phase 1: Foundation Understanding (Week 1)
 1. **Start with the README.md** - Get familiar with setup and basic concepts
 2. **Run the application locally** - Follow the development setup guide
-3. **Explore the API endpoints** - Use the interactive docs at http://localhost:8000/docs
+3. **Explore the API endpoints** - Use the interactive docs at http://localhost:5001/docs
 4. **Understand the data flow** - Trace a complete transcription workflow
 
 #### Phase 2: Frontend Deep Dive (Week 2)
@@ -692,9 +692,9 @@ cProfile.run('your_function()')
 ### Monitoring and Observability
 
 #### Health Check Endpoints
-- Frontend: Application runs on http://localhost:3000
-- Backend: http://localhost:8080/actuator/health
-- Python Service: http://localhost:8000/health
+- Frontend: Application runs on http://localhost:3737
+- Backend: http://localhost:7331/actuator/health
+- Python Service: http://localhost:5001/health
 
 #### Log Locations
 - Backend: Console output or configured log file

@@ -22,8 +22,8 @@ Whisperrr transforms audio content into accurate, searchable text using state-of
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐
 │  React Frontend │◄──►│ Spring Boot API  │◄──►│   Python    │
-│   (Port 3000)   │    │   (Port 8080)   │    │  Service    │
-│                 │    │                 │    │ (Port 8000) │
+│   (Port 3737)   │    │   (Port 7331)   │    │  Service    │
+│                 │    │                 │    │ (Port 5001) │
 │  • File Upload  │    │ • Validation    │    │ • Whisper AI│
 │  • Results View │    │ • Proxy/Relay   │    │ • Processing│
 └─────────────────┘    └─────────────────┘    └─────────────┘
@@ -53,9 +53,9 @@ cd Whisperrr
 docker compose up -d
 
 # Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8080
-# Python Service: http://localhost:8000
+# Frontend: http://localhost:3737
+# Backend API: http://localhost:7331
+# Python Service: http://localhost:5001
 ```
 
 ### View Logs
@@ -77,6 +77,7 @@ Whisperrr/
 ├── frontend/          # React TypeScript Frontend
 ├── backend/           # Spring Boot API Proxy
 ├── python-service/    # FastAPI Transcription Service
+├── docs/              # Documentation
 └── docker-compose.yml # Docker Compose configuration
 ```
 
@@ -86,9 +87,9 @@ Whisperrr/
 
 #### Backend (`backend/src/main/resources/application.properties`)
 ```properties
-server.port=8080
-whisperrr.service.url=http://localhost:8000
-cors.allowed-origins=http://localhost:3000,http://localhost:3001
+server.port=7331
+whisperrr.service.url=http://localhost:5001
+cors.allowed-origins=http://localhost:3737,http://localhost:3738
 spring.servlet.multipart.max-file-size=1000MB
 ```
 
@@ -98,7 +99,7 @@ spring.servlet.multipart.max-file-size=1000MB
 Default configuration:
 - Model size: `base` (tiny, base, small, medium, large, large-v2, large-v3)
 - Max file size: `1GB`
-- CORS origins: `http://localhost:8080,http://localhost:3000`
+- CORS origins: `http://localhost:7331,http://localhost:3737`
 - Log level: `INFO`
 
 To override defaults, set environment variables:
@@ -112,11 +113,11 @@ export MODEL_SIZE=small
 
 Default configuration:
 - Max file size: `1GB`
-- API URL: `http://localhost:8080/api` (can be overridden via `REACT_APP_API_URL`)
+- API URL: `http://localhost:7331/api` (can be overridden via `REACT_APP_API_URL`)
 
 To override defaults, set environment variables at build time:
 ```bash
-export REACT_APP_API_URL=http://localhost:8080/api
+export REACT_APP_API_URL=http://localhost:7331/api
 export REACT_APP_MAX_FILE_SIZE=1000
 ```
 
@@ -137,20 +138,20 @@ export REACT_APP_MAX_FILE_SIZE=1000
 | `GET` | `/health` | Service health and model status |
 | `GET` | `/model/info` | Current model information |
 
-**Interactive API Documentation**: http://localhost:8000/docs
+**Interactive API Documentation**: http://localhost:5001/docs
 
 ### Example Usage
 
 ```bash
 # Upload and transcribe audio file
-curl -X POST http://localhost:8080/api/audio/transcribe \
+curl -X POST http://localhost:7331/api/audio/transcribe \
   -F "audioFile=@recording.mp3"
 ```
 
 ## 🎯 How to Use
 
 1. **Start the Application**: Run `docker compose up -d`
-2. **Open Browser**: Navigate to `http://localhost:3000`
+2. **Open Browser**: Navigate to `http://localhost:3737`
 3. **Upload Audio**: Drag and drop or select an audio file
 4. **Get Results**: View transcription results immediately
 
@@ -215,8 +216,8 @@ docker compose ps
 - Check both services are running on correct ports
 
 ### Transcription Timeouts
-- Check Python service health: `curl http://localhost:8000/health`
-- Verify model is loaded: `curl http://localhost:8000/model/info`
+- Check Python service health: `curl http://localhost:5001/health`
+- Verify model is loaded: `curl http://localhost:5001/model/info`
 - Check available system resources
 
 ### File Upload Failures
@@ -226,7 +227,11 @@ docker compose ps
 
 ## 📚 Documentation
 
-- **[OVERVIEW.md](OVERVIEW.md)** - Detailed technical architecture guide
+- **[Getting Started](docs/getting-started/QUICK_START.md)** - Quick start guide
+- **[Architecture](docs/architecture/OVERVIEW.md)** - Technical architecture guide
+- **[Configuration](docs/guides/CONFIGURATION.md)** - Configuration guide
+- **[Codebase Guide](docs/development/CODEBASE_GUIDE.md)** - Developer guide
+- **[Documentation Index](docs/README.md)** - Complete documentation index
 - **[LICENSE](LICENSE)** - MIT License
 
 ## 🤝 Contributing

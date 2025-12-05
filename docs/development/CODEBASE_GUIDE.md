@@ -22,8 +22,8 @@ Whisperrr is a **stateless, microservices-based** audio transcription platform w
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
 │  │  React Frontend │◄──►│ Spring Boot API │◄──►│   Python    │ │
-│  │   (Port 3000)   │    │   (Port 8080)   │    │  Service    │ │
-│  │                 │    │                 │    │ (Port 8000) │ │
+│  │   (Port 3737)   │    │   (Port 7331)   │    │  Service    │ │
+│  │                 │    │                 │    │ (Port 5001) │ │
 │  │  • TypeScript   │    │  • Java 21      │    │  • FastAPI  │ │
 │  │  • React 18     │    │  • Spring Boot  │    │  • Whisper  │ │
 │  │  • Tailwind CSS │    │  • No Database  │    │  • CTranslate│ │
@@ -131,8 +131,8 @@ Whisperrr is a **stateless, microservices-based** audio transcription platform w
 
 #### Configuration
 - **`backend/src/main/resources/application.properties`** - **CRITICAL**: Application configuration
-  - Server port: 8080
-  - Python service URL: `http://localhost:8000`
+  - Server port: 7331
+  - Python service URL: `http://localhost:5001`
   - CORS configuration
   - File upload limits (1GB)
   - **NO DATABASE CONFIGURATION** - explicitly stateless
@@ -225,14 +225,14 @@ Whisperrr is a **stateless, microservices-based** audio transcription platform w
        └─> useTranscription.ts: transcribeAudio(file, modelSize)
            └─> transcription.ts: TranscriptionService.transcribeAudio()
                └─> api.ts: apiClient.post('/audio/transcribe', formData)
-                   └─> HTTP POST to http://localhost:8080/api/audio/transcribe
+                   └─> HTTP POST to http://localhost:7331/api/audio/transcribe
 
 3. BACKEND RECEIVES REQUEST
    └─> AudioController.java: transcribeAudio()
        └─> AudioServiceImpl.java: transcribeAudio()
            ├─> validateAudioFile() - File size, format, content type validation
            └─> RestTemplate.postForEntity() to Python service
-               └─> HTTP POST to http://python-service:8000/transcribe
+               └─> HTTP POST to http://python-service:5001/transcribe
                    └─> MultipartFile converted to ByteArrayResource
 
 4. PYTHON SERVICE PROCESSES
@@ -327,13 +327,13 @@ If persistence is required in the future, you would need to:
 #### 1. Frontend ↔ Backend
 - **Protocol**: HTTP REST API
 - **Format**: JSON (requests/responses), MultipartFormData (file uploads)
-- **Base URL**: `http://localhost:8080/api` (configurable via `REACT_APP_API_URL`)
+- **Base URL**: `http://localhost:7331/api` (configurable via `REACT_APP_API_URL`)
 - **CORS**: Enabled via `CorsConfig.java`
 
 #### 2. Backend ↔ Python Service
 - **Protocol**: HTTP REST API
 - **Format**: MultipartFormData (file uploads), JSON (responses)
-- **Base URL**: `http://python-service:8000` (Docker) or `http://localhost:8000` (local)
+- **Base URL**: `http://python-service:5001` (Docker) or `http://localhost:5001` (local)
 - **Client**: Spring `RestTemplate` in `AudioServiceImpl.java`
 - **Timeout**: 5 seconds connection timeout, no read timeout (for long transcriptions)
 
@@ -357,7 +357,7 @@ FormData:
 
 #### Backend → Python Service Request
 ```java
-POST http://python-service:8000/transcribe?model_size=base
+POST http://python-service:5001/transcribe?model_size=base
 Content-Type: multipart/form-data
 
 Body:
