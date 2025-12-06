@@ -16,7 +16,11 @@
 5. [Python Service Configuration](#python-service-configuration)
 6. [Environment Variables](#environment-variables)
 7. [Docker Configuration](#docker-configuration)
-8. [Best Practices](#best-practices)
+8. [Remote Deployment Configuration](#remote-deployment-configuration)
+9. [Best Practices](#best-practices)
+
+**Related Guides:**
+- [CORS Troubleshooting Guide](./CORS_TROUBLESHOOTING.md) - Fix CORS issues, especially with Cloudflare Tunnel
 
 ---
 
@@ -351,15 +355,40 @@ For remote deployment scenarios, use the setup script's remote deployment mode t
 
 1. The script prompts for a single remote host and port per service (Frontend, Backend, Python)
 2. URLs are automatically constructed with HTTPS protocol for secure remote access
-3. CORS is configured with:
+3. **Cloudflare Tunnel Support:** If using Cloudflare Tunnel or similar proxy, ports are automatically omitted from URLs
+4. CORS is configured with:
    - **Backend**: Frontend URL (HTTPS)
    - **Python Service**: Frontend URL + Backend URL (both HTTPS)
 
 **Note:** Remote deployment mode uses HTTPS for all URLs, while non-remote mode uses HTTP for local development.
 
-### Example Configuration
+### Cloudflare Tunnel Configuration
 
-**Setup Script Output:**
+When using Cloudflare Tunnel or similar proxies (Tailscale, ngrok), **ports should NOT be included** in URLs because:
+- HTTPS defaults to port 443
+- The proxy handles routing internally
+- Public URLs don't expose internal ports
+
+**Setup Script with Cloudflare Tunnel:**
+```bash
+./setup-env.sh
+# When prompted:
+# 1. "Set up for remote deployment? (y/N)" → Answer "y"
+# 2. "Are you using Cloudflare Tunnel or similar proxy? (y/N)" → Answer "y"
+# 3. Enter domains without ports (e.g., "whisperrr.shangmin.me")
+```
+
+**Example Configuration (Cloudflare Tunnel):**
+```
+Frontend:  whisperrr.shangmin.me -> https://whisperrr.shangmin.me (port omitted)
+Backend:   api-whisperrr.shangmin.me -> https://api-whisperrr.shangmin.me (port omitted)
+Python:    python-whisperrr.shangmin.me -> https://python-whisperrr.shangmin.me (port omitted)
+
+CORS_ALLOWED_ORIGINS=https://whisperrr.shangmin.me
+CORS_ORIGINS=https://whisperrr.shangmin.me,https://api-whisperrr.shangmin.me
+```
+
+**Example Configuration (Direct HTTPS with Ports):**
 ```
 Frontend:  example.com:3737 -> https://example.com:3737
 Backend:   example.com:7331 -> https://example.com:7331
@@ -369,9 +398,31 @@ CORS_ALLOWED_ORIGINS=https://example.com:3737
 CORS_ORIGINS=https://example.com:3737,https://example.com:7331
 ```
 
+**⚠️ Important:** If you're using Cloudflare Tunnel and include ports in URLs, CORS will fail because browsers send origins without ports. See [CORS Troubleshooting Guide](./CORS_TROUBLESHOOTING.md) for details.
+
 ### Manual Configuration
 
 If you prefer to create `.env` files manually for remote deployment:
+
+**For Cloudflare Tunnel (ports omitted):**
+
+**`backend/.env`:**
+```properties
+CORS_ALLOWED_ORIGINS=https://whisperrr.shangmin.me
+WHISPERRR_SERVICE_URL=https://python-whisperrr.shangmin.me
+```
+
+**`python-service/.env`:**
+```properties
+CORS_ORIGINS=https://whisperrr.shangmin.me,https://api-whisperrr.shangmin.me
+```
+
+**`frontend/.env`:**
+```properties
+REACT_APP_API_URL=https://api-whisperrr.shangmin.me/api
+```
+
+**For Direct HTTPS (with ports):**
 
 **`backend/.env`:**
 ```properties
@@ -389,7 +440,9 @@ CORS_ORIGINS=https://example.com:3737,https://example.com:7331
 REACT_APP_API_URL=https://example.com:7331/api
 ```
 
-**Note:** The setup script (`setup-env.sh`) can generate these files automatically with proper validation.
+**Note:** The setup script (`setup-env.sh`) can generate these files automatically with proper validation. It will ask if you're using Cloudflare Tunnel and configure URLs accordingly.
+
+**⚠️ CORS Issues?** If you're experiencing CORS errors, see the [CORS Troubleshooting Guide](./CORS_TROUBLESHOOTING.md) for diagnosis and solutions.
 
 ## Best Practices
 

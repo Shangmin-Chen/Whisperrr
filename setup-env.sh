@@ -175,15 +175,24 @@ validate_port() {
 }
 
 # Function to build URL from host and port
+# For HTTPS with Cloudflare Tunnel or similar proxies, ports are omitted (defaults to 443)
 build_url() {
     local host=$1
     local port=$2
     local protocol=$3
+    local omit_port=$4  # Set to "true" to omit port (for Cloudflare Tunnel)
+    
     # Use provided protocol or default to http
     if [ -z "$protocol" ]; then
         protocol="http"
     fi
-    echo "${protocol}://${host}:${port}"
+    
+    # For HTTPS with Cloudflare Tunnel or similar, omit port (defaults to 443)
+    if [ "$omit_port" = "true" ] || ([ "$protocol" = "https" ] && [ "$omit_port" != "false" ]); then
+        echo "${protocol}://${host}"
+    else
+        echo "${protocol}://${host}:${port}"
+    fi
 }
 
 # Prompt for remote deployment mode
@@ -210,6 +219,13 @@ if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
     echo -e "${BLUE}Remote Deployment Mode - Remote URL Configuration${NC}"
     echo ""
     
+    # Ask about Cloudflare Tunnel or similar proxy
+    echo -e "${YELLOW}Are you using Cloudflare Tunnel or similar proxy? (y/N)${NC}"
+    echo -e "  (Yes: URLs will omit ports, e.g., https://example.com)"
+    echo -e "  (No:  URLs will include ports, e.g., https://example.com:3737)"
+    read -p "Using Cloudflare Tunnel/proxy [N]: " USE_TUNNEL
+    USE_TUNNEL=${USE_TUNNEL:-N}
+    
     # Collect Frontend host
     echo -e "${YELLOW}Frontend Service Configuration${NC}"
     echo -e "Enter the frontend host (IP or domain):"
@@ -230,7 +246,11 @@ if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
     
     FRONTEND_HOSTS=("$host")
     FRONTEND_PORTS=("$port")
-    FRONTEND_URLS=("$(build_url "$host" "$port" "https")")
+    if [[ $USE_TUNNEL =~ ^[Yy]$ ]]; then
+        FRONTEND_URLS=("$(build_url "$host" "$port" "https" "true")")
+    else
+        FRONTEND_URLS=("$(build_url "$host" "$port" "https" "false")")
+    fi
     
     # Collect Backend host
     echo ""
@@ -253,7 +273,11 @@ if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
     
     BACKEND_HOSTS=("$host")
     BACKEND_PORTS=("$port")
-    BACKEND_URLS=("$(build_url "$host" "$port" "https")")
+    if [[ $USE_TUNNEL =~ ^[Yy]$ ]]; then
+        BACKEND_URLS=("$(build_url "$host" "$port" "https" "true")")
+    else
+        BACKEND_URLS=("$(build_url "$host" "$port" "https" "false")")
+    fi
     
     # Collect Python service host
     echo ""
@@ -276,7 +300,11 @@ if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
     
     PYTHON_HOSTS=("$host")
     PYTHON_PORTS=("$port")
-    PYTHON_URLS=("$(build_url "$host" "$port" "https")")
+    if [[ $USE_TUNNEL =~ ^[Yy]$ ]]; then
+        PYTHON_URLS=("$(build_url "$host" "$port" "https" "true")")
+    else
+        PYTHON_URLS=("$(build_url "$host" "$port" "https" "false")")
+    fi
     
     # Set single URL variables
     HOST="${FRONTEND_HOSTS[0]}"
@@ -362,9 +390,15 @@ echo -e "${GREEN}═════════════════════
 
 if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
     # Display remote URLs
-    echo -e "${BLUE}Frontend:${NC}  ${FRONTEND_HOSTS[0]}:${FRONTEND_PORTS[0]} -> ${FRONTEND_URLS[0]}"
-    echo -e "${BLUE}Backend:${NC}   ${BACKEND_HOSTS[0]}:${BACKEND_PORTS[0]} -> ${BACKEND_URLS[0]}"
-    echo -e "${BLUE}Python:${NC}    ${PYTHON_HOSTS[0]}:${PYTHON_PORTS[0]} -> ${PYTHON_URLS[0]}"
+    if [[ $USE_TUNNEL =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}Frontend:${NC}  ${FRONTEND_HOSTS[0]} -> ${FRONTEND_URLS[0]} ${YELLOW}(Cloudflare Tunnel - port omitted)${NC}"
+        echo -e "${BLUE}Backend:${NC}   ${BACKEND_HOSTS[0]} -> ${BACKEND_URLS[0]} ${YELLOW}(Cloudflare Tunnel - port omitted)${NC}"
+        echo -e "${BLUE}Python:${NC}    ${PYTHON_HOSTS[0]} -> ${PYTHON_URLS[0]} ${YELLOW}(Cloudflare Tunnel - port omitted)${NC}"
+    else
+        echo -e "${BLUE}Frontend:${NC}  ${FRONTEND_HOSTS[0]}:${FRONTEND_PORTS[0]} -> ${FRONTEND_URLS[0]}"
+        echo -e "${BLUE}Backend:${NC}   ${BACKEND_HOSTS[0]}:${BACKEND_PORTS[0]} -> ${BACKEND_URLS[0]}"
+        echo -e "${BLUE}Python:${NC}    ${PYTHON_HOSTS[0]}:${PYTHON_PORTS[0]} -> ${PYTHON_URLS[0]}"
+    fi
 else
     # Simple mode display
     echo -e "Host:              ${BLUE}${HOST}${NC}"
@@ -426,7 +460,7 @@ EOF
 echo -e "${GREEN}✓ Python service .env file created at ${PYTHON_ENV_FILE}${NC}"
 echo ""
 
-# Generate cleanup script
+# Generate cleanup script (with self-removal feature)
 CLEANUP_SCRIPT="cleanup-env.sh"
 echo -e "${BLUE}Generating cleanup script...${NC}"
 cat > "$CLEANUP_SCRIPT" << 'CLEANUP_EOF'
@@ -497,6 +531,27 @@ echo ""
 
 cleanup_service_env "Python Service" "python-service/.env"
 echo ""
+
+# Ask about removing cleanup script itself
+echo -e "${BLUE}Checking for cleanup script...${NC}"
+CLEANUP_SCRIPT="cleanup-env.sh"
+if [ -f "$CLEANUP_SCRIPT" ]; then
+    echo -e "${YELLOW}Found cleanup script: ${CLEANUP_SCRIPT}${NC}"
+    read -p "Delete cleanup script itself? [y/N]: " confirm_cleanup
+    confirm_cleanup=${confirm_cleanup:-N}
+    
+    if [[ $confirm_cleanup =~ ^[Yy]$ ]]; then
+        rm -f "$CLEANUP_SCRIPT"
+        if [ ! -f "$CLEANUP_SCRIPT" ]; then
+            echo -e "${GREEN}✓ Deleted cleanup script${NC}"
+        else
+            echo -e "${RED}✗ Failed to delete cleanup script${NC}"
+        fi
+    else
+        echo -e "${BLUE}  Kept cleanup script${NC}"
+    fi
+    echo ""
+fi
 
 echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Cleanup Complete!${NC}"

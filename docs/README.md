@@ -26,6 +26,7 @@ Welcome to the Whisperrr documentation. This index helps you find the right docu
 ### For DevOps
 - **[Deployment Guide](guides/DEPLOYMENT.md)** - Production deployment (coming soon)
 - **[Configuration Guide](guides/CONFIGURATION.md)** - Configuration management
+- **[CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)** - Fix CORS issues, especially with Cloudflare Tunnel
 
 ---
 
@@ -51,6 +52,7 @@ How-to guides and references.
 
 - **[Features](guides/FEATURES.md)** - Platform features and capabilities
 - **[Configuration](guides/CONFIGURATION.md)** - Configuration management
+- **[CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)** - Fix CORS issues, especially with Cloudflare Tunnel
 - **[API Reference](guides/API.md)** - API documentation (coming soon)
 - **[Deployment](guides/DEPLOYMENT.md)** - Deployment instructions (coming soon)
 - **[Troubleshooting](guides/TROUBLESHOOTING.md)** - Common issues and solutions (coming soon)
@@ -95,6 +97,7 @@ Documentation about documentation.
 - [Quick Start](getting-started/QUICK_START.md)
 - [Features](guides/FEATURES.md)
 - [Configuration Guide](guides/CONFIGURATION.md)
+- [CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)
 - [Development Setup](getting-started/DEVELOPMENT_SETUP.md) (coming soon)
 
 **Development:**
@@ -120,6 +123,7 @@ Documentation about documentation.
 - **Understand the architecture:** [Architecture Overview](architecture/OVERVIEW.md)
 - **Navigate the codebase:** [Codebase Guide](development/CODEBASE_GUIDE.md)
 - **Configure the system:** [Configuration Guide](guides/CONFIGURATION.md)
+- **Fix CORS issues:** [CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)
 - **Deploy to production:** [Deployment Guide](guides/DEPLOYMENT.md) (coming soon)
 - **Use the API:** [API Reference](guides/API.md) (coming soon)
 - **Contribute code:** [Contributing Guidelines](../CONTRIBUTING.md) (coming soon)
@@ -162,6 +166,7 @@ All documentation should follow:
 - ✅ Templates created
 - ✅ Maintenance guidelines established
 - ✅ Configuration guide
+- ✅ CORS troubleshooting guide
 - ✅ Architecture overview
 - ✅ Codebase guide
 - ✅ Quick start guide
