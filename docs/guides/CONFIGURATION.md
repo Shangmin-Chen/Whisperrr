@@ -38,8 +38,13 @@ Each service defines all defaults in a central configuration file:
 ### Environment Variable Overrides
 
 - Environment variables can override defaults
-- No `.env` file support (Python service explicitly doesn't read `.env` files)
+- Each service supports `.env` files for easy configuration:
+  - **Frontend:** `frontend/.env` (read at build/start time)
+  - **Backend:** `backend/.env` (read automatically via spring-dotenv)
+  - **Python Service:** `python-service/.env` (read automatically via Pydantic Settings)
+- Environment variables (set in shell/system) override `.env` file values
 - Configuration files serve as documentation of all available options
+- Use cleanup script to reset to defaults: `./cleanup-env.sh` (interactive prompts)
 
 ---
 
@@ -75,12 +80,29 @@ if (fileSize > AppConfig.MAX_FILE_SIZE_BYTES) {
 **Key Settings:**
 ```properties
 server.port=7331
-whisperrr.service.url=http://localhost:5001
-cors.allowed-origins=http://localhost:3737,http://localhost:3738
+whisperrr.service.url=${WHISPERRR_SERVICE_URL:http://localhost:5001}
+cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:3737,http://localhost:3738}
 spring.servlet.multipart.max-file-size=50MB
 ```
 
 **Production Overrides:** `backend/src/main/resources/application-prod.properties`
+
+### Environment File
+
+**Location:** `backend/.env`
+
+**Automatically loaded by Spring Boot via spring-dotenv library.**
+
+**Example:**
+```properties
+CORS_ALLOWED_ORIGINS=http://192.168.1.100:3737
+WHISPERRR_SERVICE_URL=http://192.168.1.100:5001
+```
+
+**Reset to Defaults:**
+```bash
+./cleanup-env.sh
+```
 
 ---
 
@@ -109,13 +131,22 @@ const timeout = UI_CONFIG.COPY_FEEDBACK_TIMEOUT_MS;
 
 ### Environment Variables
 
-**Build-time variables:**
-```bash
-REACT_APP_API_URL=http://localhost:7331/api
+**Location:** `frontend/.env`
+
+**Automatically read by React at build/start time.**
+
+**Example:**
+```properties
+REACT_APP_API_URL=http://192.168.1.100:7331/api
 REACT_APP_MAX_FILE_SIZE=50  # in MB
 ```
 
-**Note:** These must be set at build time, not runtime.
+**Note:** These must be set before `npm start` (React reads env vars at start time, not runtime).
+
+**Reset to Defaults:**
+```bash
+./cleanup-env.sh
+```
 
 ---
 
@@ -143,44 +174,82 @@ beam_size = settings.beam_size
 timeout = settings.ffmpeg_conversion_timeout_seconds
 ```
 
-### Important Note
+### Environment File
 
-⚠️ **The Python service does NOT use `.env` files.** All defaults are defined in `config.py`. Environment variables can override defaults, but they must be set directly in your environment (via shell export, Docker, or deployment configuration), **not** via a `.env` file.
+**Location:** `python-service/.env`
+
+**Automatically read by FastAPI/Pydantic Settings at startup.**
+
+**Example:**
+```properties
+CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331
+MODEL_SIZE=base
+MAX_FILE_SIZE_MB=50
+LOG_LEVEL=INFO
+```
+
+**Reset to Defaults:**
+```bash
+./cleanup-env.sh
+```
+
+**Note:** Environment variables (set in shell/system) override `.env` file values. All defaults are defined in `config.py`.
 
 ---
 
 ## Environment Variables
 
+Each service uses a `.env` file for configuration. The setup script (`setup-env.sh`) automatically generates these files.
+
+### Component-Specific .env Files
+
+**Frontend:** `frontend/.env`
+- Read at build/start time by React
+- Must exist before running `npm start`
+
+**Backend:** `backend/.env`
+- Read automatically by Spring Boot via spring-dotenv
+- Loaded at application startup
+
+**Python Service:** `python-service/.env`
+- Read automatically by FastAPI/Pydantic Settings
+- Loaded at application startup
+
 ### Backend Environment Variables
+
+**File:** `backend/.env`
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SERVER_PORT` | Server port | `7331` |
-| `WHISPERRR_SERVICE_URL` | Python service URL | `http://python-service:5001` |
 | `CORS_ALLOWED_ORIGINS` | Allowed CORS origins (comma-separated) | `http://localhost:3737,http://localhost:3738` |
+| `WHISPERRR_SERVICE_URL` | Python service URL | `http://localhost:5001` |
 
 **CORS Configuration:**
 - Supports comma-separated list of frontend URLs
-- Example: `http://example.com:3737,http://192.168.1.100:3737`
+- Example: `CORS_ALLOWED_ORIGINS=http://example.com:3737,http://192.168.1.100:3737`
 - Supports wildcard (`*`) for dynamic tunnel URLs (e.g., Cloudflare)
 
 ### Frontend Environment Variables
+
+**File:** `frontend/.env`
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `REACT_APP_API_URL` | Backend API base URL | `http://localhost:7331/api` |
 | `REACT_APP_MAX_FILE_SIZE` | Max file size in MB | `50` |
 
-**Note:** Frontend environment variables must be set at build time.
+**Note:** Frontend environment variables must be set before `npm start` (React reads env vars at start time, not runtime).
 
 ### Python Service Environment Variables
+
+**File:** `python-service/.env`
 
 See [Environment Variables Reference](ENVIRONMENT_VARIABLES.md) for complete list.
 
 **Common variables:**
+- `CORS_ORIGINS` - CORS allowed origins (comma-separated list of frontend + backend URLs)
 - `MODEL_SIZE` - Whisper model size (default: `base`)
 - `MAX_FILE_SIZE_MB` - Max file size in MB (default: `50`)
-- `CORS_ORIGINS` - CORS allowed origins (comma-separated list of frontend + backend URLs)
 - `LOG_LEVEL` - Log level (default: `INFO`)
 - `SERVER_PORT` - Server port (default: `5001`)
 
@@ -188,6 +257,22 @@ See [Environment Variables Reference](ENVIRONMENT_VARIABLES.md) for complete lis
 - `CORS_ORIGINS` should include both frontend and backend URLs
 - Format: comma-separated list (e.g., `http://frontend:3737,http://backend:7331`)
 - Example with multiple hosts: `http://example.com:3737,http://192.168.1.100:3737,http://example.com:7331,http://192.168.1.100:7331`
+
+### Cleanup Script
+
+A top-level interactive cleanup script is available to reset services to default localhost configuration:
+
+```bash
+./cleanup-env.sh
+```
+
+The script will:
+- Prompt you for each service (Frontend, Backend, Python Service)
+- Ask if you want to delete its `.env` file
+- Default answer is "yes" (press Enter to confirm)
+- Only prompt for services that have `.env` files
+
+This removes the `.env` files, causing services to use default values from configuration files.
 
 ---
 
@@ -203,6 +288,8 @@ See [Environment Variables Reference](ENVIRONMENT_VARIABLES.md) for complete lis
 - Python Service: `5001:5001`
 
 **Environment Variables:**
+
+Option 1: Use environment variables in docker-compose.yml
 ```yaml
 services:
   python-service:
@@ -218,6 +305,24 @@ services:
     environment:
       - REACT_APP_API_URL=http://localhost:7331/api
 ```
+
+Option 2: Use .env files (mount them as volumes)
+```yaml
+services:
+  python-service:
+    volumes:
+      - ./python-service/.env:/app/.env
+      
+  backend:
+    volumes:
+      - ./backend/.env:/app/.env
+      
+  frontend:
+    volumes:
+      - ./frontend/.env:/app/.env
+```
+
+**Note:** Environment variables in docker-compose.yml override `.env` file values.
 
 ---
 
@@ -264,15 +369,25 @@ CORS_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737,http://x.y.com:7331,h
 
 ### Manual Configuration
 
-If you prefer to set variables manually for multi-host scenarios:
+If you prefer to create `.env` files manually for multi-host scenarios:
 
-```bash
-# Multiple frontend URLs for backend CORS
-export CORS_ALLOWED_ORIGINS="http://example.com:3737,http://192.168.1.100:3737"
-
-# Frontend + backend URLs for Python service CORS
-export CORS_ORIGINS="http://example.com:3737,http://192.168.1.100:3737,http://example.com:7331,http://192.168.1.100:7331"
+**`backend/.env`:**
+```properties
+CORS_ALLOWED_ORIGINS=http://example.com:3737,http://192.168.1.100:3737
+WHISPERRR_SERVICE_URL=http://example.com:5001
 ```
+
+**`python-service/.env`:**
+```properties
+CORS_ORIGINS=http://example.com:3737,http://192.168.1.100:3737,http://example.com:7331,http://192.168.1.100:7331
+```
+
+**`frontend/.env`:**
+```properties
+REACT_APP_API_URL=http://example.com:7331/api
+```
+
+**Note:** The setup script (`setup-env.sh`) can generate these files automatically with proper validation.
 
 ## Best Practices
 
@@ -282,15 +397,23 @@ export CORS_ORIGINS="http://example.com:3737,http://192.168.1.100:3737,http://ex
    - All defaults should be in configuration files
    - Configuration files serve as documentation
 
-2. **Use Environment Variables for Overrides:**
-   - Override defaults via environment variables
+2. **Use .env Files for Overrides:**
+   - Override defaults via `.env` files (one per service)
+   - Generated automatically by `setup-env.sh`
+   - Environment variables (shell/system) override `.env` file values
    - Never hardcode values in code
 
-3. **Use Setup Script for Multi-Host:**
-   - For remote deployment with multiple hosts, use `setup-env.sh` remote deployment mode
+3. **Use Setup Script for Configuration:**
+   - Run `setup-env.sh` to generate `.env` files for all services
+   - For remote deployment with multiple hosts, use remote deployment mode
    - The script validates inputs and generates correct CORS configuration
 
-4. **Document All Options:**
+4. **Use Cleanup Script to Reset:**
+   - Run `./cleanup-env.sh` for interactive cleanup of any service
+   - Prompts for each service with default "yes" answer
+   - Useful for switching between localhost and remote configurations
+
+5. **Document All Options:**
    - Keep configuration files well-documented
    - Update this guide when adding new options
 

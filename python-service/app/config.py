@@ -110,8 +110,10 @@ class Settings(BaseSettings):
     ]
     
     class Config:
-        # Only read from environment variables, not .env file
+        # Read from .env file in the python-service directory, then environment variables
         # This makes config.py the single source of truth for defaults
+        # Environment variables override .env file values
+        env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
     

@@ -121,7 +121,10 @@ The script will:
 - Ask if you want remote deployment mode (for multiple hosts per service)
 - Prompt for host IP and ports (single host mode) or multiple hosts per service (remote deployment mode)
 - Validate inputs
-- Save variables to `.env-export.sh`
+- Generate component-specific `.env` files for each service:
+  - `frontend/.env` - Frontend configuration
+  - `backend/.env` - Backend configuration
+  - `python-service/.env` - Python service configuration
 
 #### Remote Deployment Mode
 
@@ -156,15 +159,9 @@ Backend Service Configuration
 ...
 ```
 
-#### Step 2: Activate Environment Variables
+#### Step 2: Start Services
 
-```bash
-source .env-export.sh
-```
-
-**Important:** You must source this file in each terminal session where you start services.
-
-#### Step 3: Start Services
+**No manual activation needed!** Each service automatically reads its `.env` file at startup.
 
 Start services in separate terminals (in this order):
 
@@ -195,9 +192,11 @@ Start services in separate terminals (in this order):
 2. Backend service second
 3. Frontend service last
 
+**Note:** Each service automatically loads its `.env` file at startup. No need to manually source or export variables.
+
 ## Environment Variables Explained
 
-When services are not running on localhost, you need to configure environment variables so they can communicate.
+When services are not running on localhost, you need to configure environment variables so they can communicate. Each service uses its own `.env` file for configuration.
 
 ### Quick Setup: Use the Script
 
@@ -205,76 +204,121 @@ The easiest way is using the setup script:
 
 ```bash
 ./setup-env.sh
-source .env-export.sh
 ```
+
+The script generates `.env` files for each service:
+- `frontend/.env` - Contains `REACT_APP_API_URL`
+- `backend/.env` - Contains `CORS_ALLOWED_ORIGINS` and `WHISPERRR_SERVICE_URL`
+- `python-service/.env` - Contains `CORS_ORIGINS`
+
+Each service automatically reads its `.env` file at startup - no manual sourcing needed!
+
+### Resetting to Defaults
+
+To reset services to default localhost configuration, use the interactive cleanup script:
+
+```bash
+./cleanup-env.sh
+```
+
+The script will prompt you for each service (Frontend, Backend, Python Service) asking if you want to delete its `.env` file. Default answer is "yes" (press Enter to confirm).
 
 ### Manual Configuration
 
-If you prefer to set variables manually:
+If you prefer to create `.env` files manually:
 
-#### Required Variables
+#### Frontend Configuration (`frontend/.env`)
 
-**1. `REACT_APP_API_URL`**
+**`REACT_APP_API_URL`**
 - **Purpose:** Tells the frontend where to find the backend API
 - **Format:** `http://HOST:PORT/api`
-- **Example:** `export REACT_APP_API_URL=http://192.168.1.100:7331/api`
-- **Used by:** Frontend (`frontend/src/utils/constants.ts`)
+- **Example:** `REACT_APP_API_URL=http://192.168.1.100:7331/api`
+- **Used by:** Frontend (React reads this at build/start time)
 
-**2. `WHISPERRR_SERVICE_URL`**
-- **Purpose:** Tells the backend where to find the Python transcription service
-- **Format:** `http://HOST:PORT`
-- **Example:** `export WHISPERRR_SERVICE_URL=http://192.168.1.100:5001`
-- **Used by:** Backend (`backend/src/main/resources/application.properties`)
+#### Backend Configuration (`backend/.env`)
 
-**3. `CORS_ALLOWED_ORIGINS`**
+**`CORS_ALLOWED_ORIGINS`**
 - **Purpose:** Configures which frontend URLs the backend accepts (CORS)
 - **Format:** Comma-separated list of URLs
-- **Example:** `export CORS_ALLOWED_ORIGINS=http://192.168.1.100:3737`
-- **Used by:** Backend
+- **Example:** `CORS_ALLOWED_ORIGINS=http://192.168.1.100:3737`
+- **Used by:** Backend (Spring Boot reads via spring-dotenv)
 
-**4. `CORS_ORIGINS`**
+**`WHISPERRR_SERVICE_URL`**
+- **Purpose:** Tells the backend where to find the Python transcription service
+- **Format:** `http://HOST:PORT`
+- **Example:** `WHISPERRR_SERVICE_URL=http://192.168.1.100:5001`
+- **Used by:** Backend (Spring Boot reads via spring-dotenv)
+
+#### Python Service Configuration (`python-service/.env`)
+
+**`CORS_ORIGINS`**
 - **Purpose:** Configures which origins the Python service accepts (CORS)
 - **Format:** Comma-separated list of URLs
-- **Example:** `export CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331`
-- **Used by:** Python Service
+- **Example:** `CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331`
+- **Used by:** Python Service (FastAPI/Pydantic reads automatically)
 
 ### Configuration Examples
 
 #### Localhost (Default)
-```bash
-export REACT_APP_API_URL=http://localhost:7331/api
-export WHISPERRR_SERVICE_URL=http://localhost:5001
-export CORS_ALLOWED_ORIGINS=http://localhost:3737,http://localhost:3738
-export CORS_ORIGINS=http://localhost:3737,http://localhost:7331
-```
+No `.env` files needed - services use defaults:
+- Frontend: `http://localhost:3737`
+- Backend: `http://localhost:7331`
+- Python: `http://localhost:5001`
 
 #### Remote IP Address
-```bash
-# Replace 192.168.1.100 with your actual IP
-export REACT_APP_API_URL=http://192.168.1.100:7331/api
-export WHISPERRR_SERVICE_URL=http://192.168.1.100:5001
-export CORS_ALLOWED_ORIGINS=http://192.168.1.100:3737
-export CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331
+
+**`frontend/.env`:**
+```
+REACT_APP_API_URL=http://192.168.1.100:7331/api
+```
+
+**`backend/.env`:**
+```
+CORS_ALLOWED_ORIGINS=http://192.168.1.100:3737
+WHISPERRR_SERVICE_URL=http://192.168.1.100:5001
+```
+
+**`python-service/.env`:**
+```
+CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331
 ```
 
 #### Multiple Hosts (Remote Deployment Mode)
-```bash
-# Example: Cloudflare tunnel domain + direct IP access
-export REACT_APP_API_URL=http://x.y.com:7331/api
-export WHISPERRR_SERVICE_URL=http://x.y.com:5001
-export CORS_ALLOWED_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737
-export CORS_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737,http://x.y.com:7331,http://192.168.1.100:7331
+
+**`frontend/.env`:**
+```
+REACT_APP_API_URL=http://x.y.com:7331/api
 ```
 
-**Note:** Use the setup script's remote deployment mode to configure multiple hosts easily. The script will generate the correct comma-separated CORS configuration automatically.
+**`backend/.env`:**
+```
+CORS_ALLOWED_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737
+WHISPERRR_SERVICE_URL=http://x.y.com:5001
+```
+
+**`python-service/.env`:**
+```
+CORS_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737,http://x.y.com:7331,http://192.168.1.100:7331
+```
+
+**Note:** Use the setup script's remote deployment mode to configure multiple hosts easily. The script will generate the correct `.env` files automatically.
 
 #### Custom Ports
-```bash
-# Frontend on 3000, Backend on 8080, Python on 9000
-export REACT_APP_API_URL=http://localhost:8080/api
-export WHISPERRR_SERVICE_URL=http://localhost:9000
-export CORS_ALLOWED_ORIGINS=http://localhost:3000
-export CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+
+**`frontend/.env`:**
+```
+REACT_APP_API_URL=http://localhost:8080/api
+```
+
+**`backend/.env`:**
+```
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+WHISPERRR_SERVICE_URL=http://localhost:9000
+```
+
+**`python-service/.env`:**
+```
+CORS_ORIGINS=http://localhost:3000,http://localhost:8080
 ```
 
 ## Verification
@@ -357,18 +401,23 @@ uvicorn app.main:app --host 0.0.0.0 --port 5001
 **Symptom:** Services still use default localhost URLs
 
 **Solution:**
-1. Ensure variables are exported before starting services
-2. For frontend, variables must be set before `npm start` (React reads env vars at start time)
-3. Restart services after changing environment variables
-4. Check that variables are exported in the same terminal session
+1. Ensure `.env` files exist in each service directory
+2. For frontend, `.env` file must exist before `npm start` (React reads env vars at start time)
+3. Restart services after changing `.env` files
+4. Verify `.env` files contain correct values
 
 **Verification:**
 ```bash
-# Check if variables are set
-echo $REACT_APP_API_URL
-echo $WHISPERRR_SERVICE_URL
-echo $CORS_ALLOWED_ORIGINS
-echo $CORS_ORIGINS
+# Check if .env files exist and contain correct values
+cat frontend/.env
+cat backend/.env
+cat python-service/.env
+```
+
+**Reset to Defaults:**
+```bash
+# Interactive cleanup script
+./cleanup-env.sh
 ```
 
 ### Frontend Can't Find Backend
@@ -376,13 +425,16 @@ echo $CORS_ORIGINS
 **Symptom:** Frontend shows network errors when trying to connect to backend
 
 **Solution:**
-1. Verify `REACT_APP_API_URL` is set correctly
-2. Restart frontend after setting `REACT_APP_API_URL`
+1. Verify `frontend/.env` contains correct `REACT_APP_API_URL`
+2. Restart frontend after creating/updating `frontend/.env` (React reads env vars at start time)
 3. Check browser console for exact error message
 4. Verify backend is running and accessible
 
 **Debug:**
 ```bash
+# Check frontend .env file
+cat frontend/.env
+
 # Test backend directly
 curl http://your-backend-url/api/audio/health
 
@@ -410,14 +462,15 @@ curl http://your-backend-url/api/audio/health
 ## Best Practices
 
 1. **Use the setup script** for initial configuration - it validates inputs and prevents errors
-2. **The script automatically saves** variables to `.env-export.sh` for easy reuse
-3. **Always source the export file** after running the setup script: `source .env-export.sh`
-4. **Source the file in each terminal session** where you need the variables
-5. **Set variables before starting services** - especially for frontend (React reads env vars at start)
-6. **Use consistent host/port values** across all variables
-7. **Start services in order:** Python → Backend → Frontend
-8. **Test connectivity** after configuration changes
+2. **The script automatically generates** `.env` files for each service component
+3. **No manual sourcing needed** - services automatically read their `.env` files at startup
+4. **Restart services after configuration changes** - services load `.env` files at startup
+5. **Use consistent host/port values** across all `.env` files
+6. **Start services in order:** Python → Backend → Frontend
+7. **Test connectivity** after configuration changes
+8. **Use cleanup script** to reset to defaults: `./cleanup-env.sh` (interactive prompts)
 9. **Document your configuration** - note which IPs/ports you're using
+10. **Keep `.env` files in `.gitignore`** - they're already excluded from version control
 
 ## Deployment Scenarios
 
@@ -436,7 +489,7 @@ When services run on different machines on the same network:
 # Run setup script with remote IP
 ./setup-env.sh
 # Enter your machine's IP address when prompted
-source .env-export.sh
+# Script automatically generates .env files for each service
 ```
 
 ### Docker Deployment
@@ -445,16 +498,20 @@ Docker Compose handles service discovery automatically using service names. For 
 
 ### Production Deployment
 
-For production, set environment variables in your deployment platform:
+For production, create `.env` files in each service directory or set environment variables in your deployment platform:
 
-**Example for systemd service:**
+**Option 1: Use .env files** (recommended for containerized deployments)
+- Create `frontend/.env`, `backend/.env`, and `python-service/.env` with production values
+- Services automatically load them at startup
+
+**Option 2: Environment variables** (for systemd, Docker, etc.)
 ```ini
 [Service]
-Environment="REACT_APP_API_URL=https://api.example.com/api"
-Environment="WHISPERRR_SERVICE_URL=https://transcribe.example.com"
 Environment="CORS_ALLOWED_ORIGINS=https://app.example.com"
-Environment="CORS_ORIGINS=https://app.example.com,https://api.example.com"
+Environment="WHISPERRR_SERVICE_URL=https://transcribe.example.com"
 ```
+
+**Note:** Environment variables override `.env` file values, so you can use either approach.
 
 ## Next Steps
 
