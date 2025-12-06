@@ -144,8 +144,8 @@ npx serve -s build -l 3737
 ```
 
 **Note:** The setup script checks prerequisites and configures all necessary environment variables. It supports both:
-- **Simple mode** (default): Single host configuration
-- **Remote deployment mode**: Multiple hosts per service (e.g., domain + IP) for advanced CORS configuration
+- **Simple mode** (default): Single host configuration with HTTP (for local development)
+- **Remote deployment mode**: Remote URL configuration with HTTPS (for production/remote deployment)
 
 For detailed setup instructions including remote deployment mode, see the [Quick Start Guide](docs/getting-started/QUICK_START.md).
 
@@ -209,10 +209,10 @@ For **remote development or custom ports**, use the setup script:
 ```
 
 The setup script automatically configures all required environment variables. It supports:
-- **Simple mode**: Single host configuration (default)
-- **Remote deployment mode**: Multiple hosts per service for advanced scenarios (e.g., Cloudflare tunnel + direct IP access)
+- **Simple mode**: Single host configuration with HTTP (default, for local development)
+- **Remote deployment mode**: Remote URL configuration with HTTPS (for production/remote deployment)
 
-For detailed information about environment variables, multi-host configuration, and advanced setup, see the [Quick Start Guide](docs/getting-started/QUICK_START.md) and [Configuration Guide](docs/guides/CONFIGURATION.md).
+For detailed information about environment variables, remote deployment configuration, and advanced setup, see the [Quick Start Guide](docs/getting-started/QUICK_START.md) and [Configuration Guide](docs/guides/CONFIGURATION.md).
 
 ### Service-Specific Configuration
 

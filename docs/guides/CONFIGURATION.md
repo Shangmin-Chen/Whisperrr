@@ -267,8 +267,8 @@ See [Environment Variables Reference](ENVIRONMENT_VARIABLES.md) for complete lis
 
 **CORS Configuration:**
 - `CORS_ORIGINS` should include both frontend and backend URLs
-- Format: comma-separated list (e.g., `http://frontend:3737,http://backend:7331`)
-- Example with multiple hosts: `http://example.com:3737,http://192.168.1.100:3737,http://example.com:7331,http://192.168.1.100:7331`
+- Format: comma-separated list (e.g., `http://frontend:3737,http://backend:7331` for local, or `https://example.com:3737,https://example.com:7331` for remote deployment)
+- Example for remote deployment: `https://example.com:3737,https://example.com:7331`
 
 ### Cleanup Script
 
@@ -338,65 +338,55 @@ services:
 
 ---
 
-## Multi-Host Configuration (Remote Deployment)
+## Remote Deployment Configuration
 
-For remote deployment scenarios where you need to configure multiple hosts per service (e.g., domain + IP address), use the setup script's remote deployment mode:
+For remote deployment scenarios, use the setup script's remote deployment mode to configure remote URLs with HTTPS:
 
 ```bash
 ./setup-env.sh
 # When prompted: "Set up for remote deployment? (y/N)", answer "y"
 ```
 
-### Use Cases
-
-- **Cloudflare Tunnel**: Configure both tunnel domain and direct IP access
-- **Multiple Network Interfaces**: Access via different network paths
-- **Load Balancing**: Multiple entry points to services
-- **Development + Production**: Test with both local and remote URLs
-
 ### How It Works
 
-1. The script prompts for multiple hosts per service (Frontend, Backend, Python)
-2. For each service, you can add multiple host:port pairs
-3. URLs are automatically constructed from host:port pairs
-4. CORS is configured with:
-   - **Backend**: All frontend URLs (comma-separated)
-   - **Python Service**: All frontend URLs + all backend URLs (comma-separated)
+1. The script prompts for a single remote host and port per service (Frontend, Backend, Python)
+2. URLs are automatically constructed with HTTPS protocol for secure remote access
+3. CORS is configured with:
+   - **Backend**: Frontend URL (HTTPS)
+   - **Python Service**: Frontend URL + Backend URL (both HTTPS)
+
+**Note:** Remote deployment mode uses HTTPS for all URLs, while non-remote mode uses HTTP for local development.
 
 ### Example Configuration
 
 **Setup Script Output:**
 ```
-Frontend Hosts:
-  x.y.com:3737 -> http://x.y.com:3737
-  192.168.1.100:3737 -> http://192.168.1.100:3737
+Frontend:  example.com:3737 -> https://example.com:3737
+Backend:   example.com:7331 -> https://example.com:7331
+Python:    example.com:5001 -> https://example.com:5001
 
-Backend Hosts:
-  x.y.com:7331 -> http://x.y.com:7331
-  192.168.1.100:7331 -> http://192.168.1.100:7331
-
-CORS_ALLOWED_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737
-CORS_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737,http://x.y.com:7331,http://192.168.1.100:7331
+CORS_ALLOWED_ORIGINS=https://example.com:3737
+CORS_ORIGINS=https://example.com:3737,https://example.com:7331
 ```
 
 ### Manual Configuration
 
-If you prefer to create `.env` files manually for multi-host scenarios:
+If you prefer to create `.env` files manually for remote deployment:
 
 **`backend/.env`:**
 ```properties
-CORS_ALLOWED_ORIGINS=http://example.com:3737,http://192.168.1.100:3737
-WHISPERRR_SERVICE_URL=http://example.com:5001
+CORS_ALLOWED_ORIGINS=https://example.com:3737
+WHISPERRR_SERVICE_URL=https://example.com:5001
 ```
 
 **`python-service/.env`:**
 ```properties
-CORS_ORIGINS=http://example.com:3737,http://192.168.1.100:3737,http://example.com:7331,http://192.168.1.100:7331
+CORS_ORIGINS=https://example.com:3737,https://example.com:7331
 ```
 
 **`frontend/.env`:**
 ```properties
-REACT_APP_API_URL=http://example.com:7331/api
+REACT_APP_API_URL=https://example.com:7331/api
 ```
 
 **Note:** The setup script (`setup-env.sh`) can generate these files automatically with proper validation.
@@ -417,7 +407,7 @@ REACT_APP_API_URL=http://example.com:7331/api
 
 3. **Use Setup Script for Configuration:**
    - Run `setup-env.sh` to generate `.env` files for all services
-   - For remote deployment with multiple hosts, use remote deployment mode
+   - For remote deployment, use remote deployment mode (uses HTTPS protocol)
    - The script validates inputs and generates correct CORS configuration
 
 4. **Use Cleanup Script to Reset:**

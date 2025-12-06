@@ -178,18 +178,18 @@ validate_port() {
 build_url() {
     local host=$1
     local port=$2
-    # Auto-detect protocol or default to http
-    if [[ $host == https://* ]]; then
-        echo "$host:$port"
-    else
-        echo "http://$host:$port"
+    local protocol=$3
+    # Use provided protocol or default to http
+    if [ -z "$protocol" ]; then
+        protocol="http"
     fi
+    echo "${protocol}://${host}:${port}"
 }
 
 # Prompt for remote deployment mode
 echo -e "${YELLOW}Set up for remote deployment? (y/N)${NC}"
-echo -e "  (Yes: Configure multiple hosts per service for CORS)"
-echo -e "  (No:  Use simple single-host configuration)"
+echo -e "  (Yes: Configure remote URLs with HTTPS)"
+echo -e "  (No:  Use simple single-host configuration with HTTP)"
 read -p "Remote deployment [N]: " REMOTE_DEPLOYMENT
 REMOTE_DEPLOYMENT=${REMOTE_DEPLOYMENT:-N}
 
@@ -205,104 +205,80 @@ PYTHON_PORTS=()
 PYTHON_URLS=()
 
 if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
-    # Remote deployment mode - collect multiple hosts per service
+    # Remote deployment mode - collect single remote URL per service with HTTPS
     echo ""
-    echo -e "${BLUE}Remote Deployment Mode - Multi-Host Configuration${NC}"
+    echo -e "${BLUE}Remote Deployment Mode - Remote URL Configuration${NC}"
     echo ""
     
-    # Collect Frontend hosts
+    # Collect Frontend host
     echo -e "${YELLOW}Frontend Service Configuration${NC}"
-    while true; do
-        echo -e "Enter the frontend host (IP or domain):"
+    echo -e "Enter the frontend host (IP or domain):"
+    read -p "Frontend Host: " host
+    while [ -z "$host" ]; do
+        echo -e "${YELLOW}Host cannot be empty.${NC}"
         read -p "Frontend Host: " host
-        if [ -z "$host" ]; then
-            echo -e "${YELLOW}Host cannot be empty.${NC}"
-            continue
-        fi
-        
-        echo -e "Enter the frontend port:"
-        read -p "Frontend Port [${DEFAULT_FRONTEND_PORT}]: " port
-        port=${port:-$DEFAULT_FRONTEND_PORT}
-        
-        if ! validate_port "$port"; then
-            echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_FRONTEND_PORT}${NC}"
-            port=$DEFAULT_FRONTEND_PORT
-        fi
-        
-        FRONTEND_HOSTS+=("$host")
-        FRONTEND_PORTS+=("$port")
-        FRONTEND_URLS+=("$(build_url "$host" "$port")")
-        
-        echo ""
-        read -p "Add more frontend hosts? (y/N): " add_more
-        if [[ ! $add_more =~ ^[Yy]$ ]]; then
-            break
-        fi
     done
     
-    # Collect Backend hosts
+    echo -e "Enter the frontend port:"
+    read -p "Frontend Port [${DEFAULT_FRONTEND_PORT}]: " port
+    port=${port:-$DEFAULT_FRONTEND_PORT}
+    
+    if ! validate_port "$port"; then
+        echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_FRONTEND_PORT}${NC}"
+        port=$DEFAULT_FRONTEND_PORT
+    fi
+    
+    FRONTEND_HOSTS=("$host")
+    FRONTEND_PORTS=("$port")
+    FRONTEND_URLS=("$(build_url "$host" "$port" "https")")
+    
+    # Collect Backend host
     echo ""
     echo -e "${YELLOW}Backend Service Configuration${NC}"
-    while true; do
-        echo -e "Enter the backend host (IP or domain):"
+    echo -e "Enter the backend host (IP or domain):"
+    read -p "Backend Host: " host
+    while [ -z "$host" ]; do
+        echo -e "${YELLOW}Host cannot be empty.${NC}"
         read -p "Backend Host: " host
-        if [ -z "$host" ]; then
-            echo -e "${YELLOW}Host cannot be empty.${NC}"
-            continue
-        fi
-        
-        echo -e "Enter the backend port:"
-        read -p "Backend Port [${DEFAULT_BACKEND_PORT}]: " port
-        port=${port:-$DEFAULT_BACKEND_PORT}
-        
-        if ! validate_port "$port"; then
-            echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_BACKEND_PORT}${NC}"
-            port=$DEFAULT_BACKEND_PORT
-        fi
-        
-        BACKEND_HOSTS+=("$host")
-        BACKEND_PORTS+=("$port")
-        BACKEND_URLS+=("$(build_url "$host" "$port")")
-        
-        echo ""
-        read -p "Add more backend hosts? (y/N): " add_more
-        if [[ ! $add_more =~ ^[Yy]$ ]]; then
-            break
-        fi
     done
     
-    # Collect Python service hosts
+    echo -e "Enter the backend port:"
+    read -p "Backend Port [${DEFAULT_BACKEND_PORT}]: " port
+    port=${port:-$DEFAULT_BACKEND_PORT}
+    
+    if ! validate_port "$port"; then
+        echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_BACKEND_PORT}${NC}"
+        port=$DEFAULT_BACKEND_PORT
+    fi
+    
+    BACKEND_HOSTS=("$host")
+    BACKEND_PORTS=("$port")
+    BACKEND_URLS=("$(build_url "$host" "$port" "https")")
+    
+    # Collect Python service host
     echo ""
     echo -e "${YELLOW}Python Service Configuration${NC}"
-    while true; do
-        echo -e "Enter the Python service host (IP or domain):"
+    echo -e "Enter the Python service host (IP or domain):"
+    read -p "Python Host: " host
+    while [ -z "$host" ]; do
+        echo -e "${YELLOW}Host cannot be empty.${NC}"
         read -p "Python Host: " host
-        if [ -z "$host" ]; then
-            echo -e "${YELLOW}Host cannot be empty.${NC}"
-            continue
-        fi
-        
-        echo -e "Enter the Python service port:"
-        read -p "Python Port [${DEFAULT_PYTHON_PORT}]: " port
-        port=${port:-$DEFAULT_PYTHON_PORT}
-        
-        if ! validate_port "$port"; then
-            echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_PYTHON_PORT}${NC}"
-            port=$DEFAULT_PYTHON_PORT
-        fi
-        
-        PYTHON_HOSTS+=("$host")
-        PYTHON_PORTS+=("$port")
-        PYTHON_URLS+=("$(build_url "$host" "$port")")
-        
-        echo ""
-        read -p "Add more Python service hosts? (y/N): " add_more
-        if [[ ! $add_more =~ ^[Yy]$ ]]; then
-            break
-        fi
     done
     
-    # Use first entries for single URL variables (for backward compatibility)
+    echo -e "Enter the Python service port:"
+    read -p "Python Port [${DEFAULT_PYTHON_PORT}]: " port
+    port=${port:-$DEFAULT_PYTHON_PORT}
+    
+    if ! validate_port "$port"; then
+        echo -e "${YELLOW}Warning: Invalid port number. Using default ${DEFAULT_PYTHON_PORT}${NC}"
+        port=$DEFAULT_PYTHON_PORT
+    fi
+    
+    PYTHON_HOSTS=("$host")
+    PYTHON_PORTS=("$port")
+    PYTHON_URLS=("$(build_url "$host" "$port" "https")")
+    
+    # Set single URL variables
     HOST="${FRONTEND_HOSTS[0]}"
     FRONTEND_PORT="${FRONTEND_PORTS[0]}"
     BACKEND_PORT="${BACKEND_PORTS[0]}"
@@ -385,21 +361,10 @@ echo -e "${GREEN}Configuration Summary:${NC}"
 echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
 
 if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
-    # Display all hosts in remote mode
-    echo -e "${BLUE}Frontend Hosts:${NC}"
-    for i in "${!FRONTEND_HOSTS[@]}"; do
-        echo -e "  ${FRONTEND_HOSTS[$i]}:${FRONTEND_PORTS[$i]} -> ${FRONTEND_URLS[$i]}"
-    done
-    echo ""
-    echo -e "${BLUE}Backend Hosts:${NC}"
-    for i in "${!BACKEND_HOSTS[@]}"; do
-        echo -e "  ${BACKEND_HOSTS[$i]}:${BACKEND_PORTS[$i]} -> ${BACKEND_URLS[$i]}"
-    done
-    echo ""
-    echo -e "${BLUE}Python Service Hosts:${NC}"
-    for i in "${!PYTHON_HOSTS[@]}"; do
-        echo -e "  ${PYTHON_HOSTS[$i]}:${PYTHON_PORTS[$i]} -> ${PYTHON_URLS[$i]}"
-    done
+    # Display remote URLs
+    echo -e "${BLUE}Frontend:${NC}  ${FRONTEND_HOSTS[0]}:${FRONTEND_PORTS[0]} -> ${FRONTEND_URLS[0]}"
+    echo -e "${BLUE}Backend:${NC}   ${BACKEND_HOSTS[0]}:${BACKEND_PORTS[0]} -> ${BACKEND_URLS[0]}"
+    echo -e "${BLUE}Python:${NC}    ${PYTHON_HOSTS[0]}:${PYTHON_PORTS[0]} -> ${PYTHON_URLS[0]}"
 else
     # Simple mode display
     echo -e "Host:              ${BLUE}${HOST}${NC}"

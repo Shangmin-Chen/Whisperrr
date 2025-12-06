@@ -118,8 +118,8 @@ The setup script checks prerequisites and configures environment variables:
 
 The script will:
 - Check prerequisites (Java, Python, Node.js, FFmpeg)
-- Ask if you want remote deployment mode (for multiple hosts per service)
-- Prompt for host IP and ports (single host mode) or multiple hosts per service (remote deployment mode)
+- Ask if you want remote deployment mode (for remote URLs with HTTPS)
+- Prompt for host IP and ports (single host mode uses HTTP, remote deployment mode uses HTTPS)
 - Validate inputs
 - Generate component-specific `.env` files for each service:
   - `frontend/.env` - Frontend configuration
@@ -130,33 +130,38 @@ The script will:
 
 When prompted "Set up for remote deployment? (y/N)", choose:
 
-- **No (default)**: Simple single-host configuration
+- **No (default)**: Simple single-host configuration with HTTP
   - Enter one host IP/domain and ports for each service
+  - Uses HTTP protocol
   - Suitable for most development scenarios
 
-- **Yes**: Multi-host configuration
-  - Configure multiple hosts per service (e.g., domain + IP)
-  - Useful for scenarios like:
-    - Cloudflare tunnel (domain) + direct IP access
-    - Multiple network interfaces
-    - Load balancing setups
-  - The script will prompt you to add multiple hosts for each service
-  - CORS will be configured with all frontend URLs (for backend) and all frontend + backend URLs (for Python service)
+- **Yes**: Remote deployment configuration with HTTPS
+  - Configure one remote host and port per service
+  - Uses HTTPS protocol for secure remote access
+  - CORS will be configured with the frontend URL (for backend) and frontend + backend URLs (for Python service)
 
 **Example Remote Deployment Flow:**
 ```
 Set up for remote deployment? (y/N): y
 
+Remote Deployment Mode - Remote URL Configuration
+
 Frontend Service Configuration
-Enter the frontend host (IP or domain): x.y.com
+Enter the frontend host (IP or domain): example.com
 Enter the frontend port: 3737
-Add more frontend hosts? (y/N): y
-Enter the frontend host (IP or domain): 192.168.1.100
-Enter the frontend port: 3737
-Add more frontend hosts? (y/N): n
 
 Backend Service Configuration
-...
+Enter the backend host (IP or domain): example.com
+Enter the backend port: 7331
+
+Python Service Configuration
+Enter the Python service host (IP or domain): example.com
+Enter the Python service port: 5001
+
+Configuration Summary:
+Frontend:  example.com:3737 -> https://example.com:3737
+Backend:   example.com:7331 -> https://example.com:7331
+Python:    example.com:5001 -> https://example.com:5001
 ```
 
 #### Step 2: Start Services
@@ -189,13 +194,14 @@ Start services in separate terminals (in this order):
    npm start
    ```
    
-   **Production mode (for remote deployment):**
+   **Production mode (for remote deployment with HTTPS):**
    ```bash
    cd frontend
    npm install
    npm run build
    npx serve -s build -l 3737
    ```
+   Note: Remote deployment uses HTTPS protocol. Make sure your reverse proxy or server is configured for HTTPS.
 
 **Important:** Start services in this order:
 1. Python service first (takes longest - model loading)
@@ -295,25 +301,25 @@ WHISPERRR_SERVICE_URL=http://192.168.1.100:5001
 CORS_ORIGINS=http://192.168.1.100:3737,http://192.168.1.100:7331
 ```
 
-#### Multiple Hosts (Remote Deployment Mode)
+#### Remote Deployment (HTTPS)
 
 **`frontend/.env`:**
 ```
-REACT_APP_API_URL=http://x.y.com:7331/api
+REACT_APP_API_URL=https://example.com:7331/api
 ```
 
 **`backend/.env`:**
 ```
-CORS_ALLOWED_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737
-WHISPERRR_SERVICE_URL=http://x.y.com:5001
+CORS_ALLOWED_ORIGINS=https://example.com:3737
+WHISPERRR_SERVICE_URL=https://example.com:5001
 ```
 
 **`python-service/.env`:**
 ```
-CORS_ORIGINS=http://x.y.com:3737,http://192.168.1.100:3737,http://x.y.com:7331,http://192.168.1.100:7331
+CORS_ORIGINS=https://example.com:3737,https://example.com:7331
 ```
 
-**Note:** Use the setup script's remote deployment mode to configure multiple hosts easily. The script will generate the correct `.env` files automatically.
+**Note:** Use the setup script's remote deployment mode to configure remote URLs with HTTPS easily. The script will generate the correct `.env` files automatically.
 
 #### Custom Ports
 
