@@ -71,6 +71,125 @@ docker compose logs -f
 docker compose down
 ```
 
+## 💻 Local Installation (Without Docker)
+
+If you prefer to run the services locally without Docker, follow these steps:
+
+### Prerequisites
+
+- **Java 21** - For Spring Boot backend
+- **Maven 3.6+** - For building Java backend (or use included `mvnw`)
+- **Node.js 18+** and **npm** - For React frontend
+- **Python 3.11+** - For FastAPI transcription service
+- **FFmpeg** - For audio processing (required by Python service)
+
+### Installation Steps
+
+#### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd Whisperrr
+```
+
+#### 2. Start Python Service
+
+The Python service handles audio transcription using Faster Whisper.
+
+```bash
+cd python-service
+
+# Create a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the service (choose one method)
+# Option 1: Using uvicorn directly
+uvicorn app.main:app --host 0.0.0.0 --port 5001
+
+# Option 2: Using python -m (more explicit, doesn't require uvicorn in PATH)
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 5001
+
+# Option 3: Run main.py directly (uses uvicorn.run() in the script)
+python3 -m app.main
+```
+
+The Python service will be available at `http://localhost:5001`
+
+**Note:** The first startup will download the Whisper model (default: `base`, ~74 MB), which may take a few minutes.
+
+#### 3. Start Backend Service
+
+The Spring Boot backend acts as a proxy and validation layer.
+
+```bash
+cd backend
+
+# Build and run (using Maven wrapper)
+./mvnw spring-boot:run
+
+# Or if you have Maven installed globally
+mvn spring-boot:run
+```
+
+The backend API will be available at `http://localhost:7331`
+
+#### 4. Start Frontend Service
+
+The React frontend provides the user interface.
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+```
+
+The frontend will be available at `http://localhost:3737` and will automatically open in your browser.
+
+### Running All Services
+
+You'll need to run each service in a separate terminal window:
+
+1. **Terminal 1**: Python service (`cd python-service && uvicorn app.main:app --host 0.0.0.0 --port 5001`)
+2. **Terminal 2**: Backend service (`cd backend && ./mvnw spring-boot:run`)
+3. **Terminal 3**: Frontend service (`cd frontend && npm start`)
+
+**Important:** Start services in this order:
+1. Python service first (it takes longest to start due to model loading)
+2. Backend service second
+3. Frontend service last
+
+### Verify Installation
+
+- **Frontend**: http://localhost:3737
+- **Backend API**: http://localhost:7331/api/audio/health
+- **Python Service**: http://localhost:5001/health
+- **Python API Docs**: http://localhost:5001/docs
+
+### Troubleshooting Local Installation
+
+#### Python Service Issues
+- **Model download fails**: Check internet connection. Models are downloaded from Hugging Face on first run.
+- **FFmpeg not found**: Install FFmpeg:
+  - macOS: `brew install ffmpeg`
+  - Ubuntu/Debian: `sudo apt-get install ffmpeg`
+  - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+
+#### Backend Issues
+- **Port 7331 already in use**: Change port in `backend/src/main/resources/application.properties`
+- **Java version error**: Ensure Java 21 is installed: `java -version`
+
+#### Frontend Issues
+- **Port 3737 already in use**: Change port in `frontend/package.json` scripts section
+- **npm install fails**: Try clearing cache: `npm cache clean --force`
+
 ## 📁 Project Structure
 
 ```

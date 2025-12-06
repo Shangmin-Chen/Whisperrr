@@ -70,3 +70,4 @@ export const DemoNotice: React.FC<DemoNoticeProps> = ({ className }) => {
     </div>
   );
 };
+

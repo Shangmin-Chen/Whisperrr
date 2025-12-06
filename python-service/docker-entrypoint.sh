@@ -14,3 +14,4 @@ else
     mkdir -p /home/appuser/.cache/huggingface 2>/dev/null || true
     exec "$@"
 fi
+
