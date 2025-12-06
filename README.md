@@ -136,6 +136,13 @@ If services run on different hosts or custom ports, use the setup script to conf
 # Then start services as described above
 ```
 
+**For Remote Deployment:** Use production mode for the frontend:
+```bash
+cd frontend
+npm run build
+npx serve -s build -l 3737
+```
+
 **Note:** The setup script checks prerequisites and configures all necessary environment variables. It supports both:
 - **Simple mode** (default): Single host configuration
 - **Remote deployment mode**: Multiple hosts per service (e.g., domain + IP) for advanced CORS configuration

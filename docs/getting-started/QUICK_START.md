@@ -181,10 +181,20 @@ Start services in separate terminals (in this order):
    ```
 
 3. **Frontend Service:**
+   
+   **Development mode:**
    ```bash
    cd frontend
    npm install
    npm start
+   ```
+   
+   **Production mode (for remote deployment):**
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   npx serve -s build -l 3737
    ```
 
 **Important:** Start services in this order:
@@ -193,6 +203,8 @@ Start services in separate terminals (in this order):
 3. Frontend service last
 
 **Note:** Each service automatically loads its `.env` file at startup. No need to manually source or export variables.
+
+**For Remote Deployment:** Use production mode for the frontend (`npm run build && npx serve -s build -l 3737`) instead of development mode (`npm start`). Production mode serves optimized static files and is better suited for remote access.
 
 ## Environment Variables Explained
 

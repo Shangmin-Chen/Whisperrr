@@ -552,11 +552,21 @@ echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo "  1. Start the Python service: cd python-service && uvicorn app.main:app --host 0.0.0.0 --port ${PYTHON_PORT}"
 echo "  2. Start the Backend service: cd backend && ./mvnw spring-boot:run"
-echo "  3. Start the Frontend service: cd frontend && npm start"
+echo "  3. Start the Frontend service:"
+if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
+    echo "     Development: cd frontend && npm start"
+    echo "     Production:  cd frontend && npm run build && npx serve -s build -l ${FRONTEND_PORT}"
+else
+    echo "     Development: cd frontend && npm start"
+    echo "     Production:  cd frontend && npm run build && npx serve -s build -l ${FRONTEND_PORT}"
+fi
 echo ""
 echo -e "${YELLOW}Important Notes:${NC}"
 echo "  • Each service automatically reads its .env file at startup"
 echo "  • No need to source any files - services load .env files automatically"
 echo "  • Restart services after running setup-env.sh to apply changes"
 echo "  • To reset to defaults, run: ./cleanup-env.sh"
+if [[ $REMOTE_DEPLOYMENT =~ ^[Yy]$ ]]; then
+    echo "  • For remote deployment, use production mode: npm run build && npx serve -s build -l ${FRONTEND_PORT}"
+fi
 echo ""
