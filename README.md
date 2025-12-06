@@ -13,6 +13,7 @@ Whisperrr transforms audio content into accurate, searchable text using state-of
 - **Fast Performance**: Up to 4x faster than OpenAI Whisper with less memory usage
 - **Multi-Language**: Support for 99+ languages with automatic detection
 - **Multiple Formats**: MP3, WAV, M4A, FLAC, OGG, WMA (up to 50MB)
+- **Segment-Level Timestamping**: View transcription results with precise start and end timestamps for each segment
 - **Stateless Architecture**: No database required - simplified deployment
 - **Modern UI**: Responsive React interface with drag-and-drop upload
 - **Production Ready**: Comprehensive error handling and monitoring

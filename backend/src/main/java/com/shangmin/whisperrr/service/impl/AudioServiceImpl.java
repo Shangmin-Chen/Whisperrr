@@ -278,8 +278,11 @@ public class AudioServiceImpl implements AudioService {
                     try {
                         TranscriptionSegment segment = new TranscriptionSegment();
                         
-                        // Extract start time
-                        Object startObj = segmentMap.get("start");
+                        // Extract start time (check both snake_case and camelCase for compatibility)
+                        Object startObj = segmentMap.get("start_time");
+                        if (startObj == null) {
+                            startObj = segmentMap.get("start"); // Fallback for backward compatibility
+                        }
                         if (startObj != null) {
                             Double startTime = extractDoubleSafely(startObj);
                             if (startTime != null) {
@@ -287,8 +290,11 @@ public class AudioServiceImpl implements AudioService {
                             }
                         }
                         
-                        // Extract end time
-                        Object endObj = segmentMap.get("end");
+                        // Extract end time (check both snake_case and camelCase for compatibility)
+                        Object endObj = segmentMap.get("end_time");
+                        if (endObj == null) {
+                            endObj = segmentMap.get("end"); // Fallback for backward compatibility
+                        }
                         if (endObj != null) {
                             Double endTime = extractDoubleSafely(endObj);
                             if (endTime != null) {

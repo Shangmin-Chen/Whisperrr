@@ -49,6 +49,7 @@ Technical architecture and design documentation.
 ### Guides
 How-to guides and references.
 
+- **[Features](guides/FEATURES.md)** - Platform features and capabilities
 - **[Configuration](guides/CONFIGURATION.md)** - Configuration management
 - **[API Reference](guides/API.md)** - API documentation (coming soon)
 - **[Deployment](guides/DEPLOYMENT.md)** - Deployment instructions (coming soon)
@@ -92,6 +93,7 @@ Documentation about documentation.
 
 **Setup & Configuration:**
 - [Quick Start](getting-started/QUICK_START.md)
+- [Features](guides/FEATURES.md)
 - [Configuration Guide](guides/CONFIGURATION.md)
 - [Development Setup](getting-started/DEVELOPMENT_SETUP.md) (coming soon)
 
@@ -113,6 +115,7 @@ Documentation about documentation.
 
 **I want to...**
 - **Get started quickly:** [Quick Start](getting-started/QUICK_START.md)
+- **Learn about features:** [Features Guide](guides/FEATURES.md)
 - **Set up development environment:** [Development Setup](getting-started/DEVELOPMENT_SETUP.md) (coming soon)
 - **Understand the architecture:** [Architecture Overview](architecture/OVERVIEW.md)
 - **Navigate the codebase:** [Codebase Guide](development/CODEBASE_GUIDE.md)
@@ -162,6 +165,7 @@ All documentation should follow:
 - ✅ Architecture overview
 - ✅ Codebase guide
 - ✅ Quick start guide
+- ✅ Features documentation
 
 ### In Progress
 - 🚧 Migrating existing documentation to new structure
