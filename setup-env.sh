@@ -1,16 +1,25 @@
 #!/bin/bash
 
-# Whisperrr Environment Setup Script
-# Interactive script to configure environment variables for multi-service communication
-# when services are not running on localhost.
-
-set -e
+# Whisperrr Setup Script
+# Main setup script for Whisperrr that checks prerequisites and configures
+# environment variables for multi-service communication.
+#
+# Use this script when:
+# - Setting up for the first time (checks prerequisites)
+# - Configuring for remote development (different host/IP)
+# - Using custom ports instead of defaults
+#
+# For localhost development with default ports, you can skip this script.
 
 # Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+# Track prerequisite check results
+PREREQ_FAILED=0
 
 # Default values
 DEFAULT_HOST="localhost"
@@ -18,9 +27,123 @@ DEFAULT_FRONTEND_PORT=3737
 DEFAULT_BACKEND_PORT=7331
 DEFAULT_PYTHON_PORT=5001
 
+# Function to check Java JDK 21
+check_java() {
+    echo -n "Checking Java JDK 21... "
+    if command -v java &> /dev/null; then
+        JAVA_VERSION=$(java -version 2>&1 | head -n 1)
+        if echo "$JAVA_VERSION" | grep -q "21\."; then
+            echo -e "${GREEN}✓${NC} Found: $JAVA_VERSION"
+            return 0
+        else
+            echo -e "${RED}✗${NC} Wrong version: $JAVA_VERSION (need JDK 21)"
+            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗${NC} Not found"
+        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        return 1
+    fi
+}
+
+# Function to check Python 3.12
+check_python() {
+    echo -n "Checking Python 3.12... "
+    if command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version 2>&1)
+        if echo "$PYTHON_VERSION" | grep -q "Python 3.12"; then
+            echo -e "${GREEN}✓${NC} Found: $PYTHON_VERSION"
+            return 0
+        else
+            echo -e "${RED}✗${NC} Wrong version: $PYTHON_VERSION (need 3.12)"
+            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗${NC} Not found"
+        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        return 1
+    fi
+}
+
+# Function to check Node.js 18+
+check_node() {
+    echo -n "Checking Node.js 18+... "
+    if command -v node &> /dev/null; then
+        NODE_VERSION=$(node --version 2>&1)
+        NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/v\([0-9]*\).*/\1/')
+        if [ "$NODE_MAJOR" -ge 18 ] 2>/dev/null; then
+            echo -e "${GREEN}✓${NC} Found: $NODE_VERSION"
+            return 0
+        else
+            echo -e "${RED}✗${NC} Wrong version: $NODE_VERSION (need 18+)"
+            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗${NC} Not found"
+        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        return 1
+    fi
+}
+
+# Function to check FFmpeg
+check_ffmpeg() {
+    echo -n "Checking FFmpeg... "
+    if command -v ffmpeg &> /dev/null; then
+        FFMPEG_VERSION=$(ffmpeg -version 2>&1 | head -n 1)
+        echo -e "${GREEN}✓${NC} Found: $FFMPEG_VERSION"
+        return 0
+    else
+        echo -e "${RED}✗${NC} Not found"
+        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        return 1
+    fi
+}
+
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     Whisperrr Environment Configuration Setup            ║${NC}"
+echo -e "${BLUE}║          Whisperrr Setup Script                            ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Check prerequisites
+echo -e "${BLUE}Checking Prerequisites...${NC}"
+echo ""
+
+if ! check_java; then
+    PREREQ_FAILED=1
+fi
+
+if ! check_python; then
+    PREREQ_FAILED=1
+fi
+
+if ! check_node; then
+    PREREQ_FAILED=1
+fi
+
+if ! check_ffmpeg; then
+    PREREQ_FAILED=1
+fi
+
+echo ""
+
+if [ $PREREQ_FAILED -eq 1 ]; then
+    echo -e "${YELLOW}⚠️  Warning: Some prerequisites are missing or incorrect.${NC}"
+    echo -e "${YELLOW}   You can continue with setup, but services may not work properly.${NC}"
+    echo -e "${YELLOW}   See docs/getting-started/PREREQUISITES.md for installation help.${NC}"
+    echo ""
+    read -p "Continue with environment setup anyway? (y/N): " CONTINUE
+    if [[ ! $CONTINUE =~ ^[Yy]$ ]]; then
+        echo "Setup cancelled."
+        exit 0
+    fi
+    echo ""
+fi
+
+echo -e "${BLUE}Environment Configuration${NC}"
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 echo ""
 
 # Function to validate IP address format (basic check)
@@ -125,22 +248,9 @@ echo -e "  CORS_ALLOWED_ORIGINS=${BLUE}${CORS_ORIGINS}${NC}"
 echo -e "  CORS_ORIGINS=${BLUE}${PYTHON_CORS_ORIGINS}${NC}"
 echo ""
 
-# Export variables
-export REACT_APP_API_URL="${BACKEND_API_URL}"
-export WHISPERRR_SERVICE_URL="${PYTHON_URL}"
-export CORS_ALLOWED_ORIGINS="${CORS_ORIGINS}"
-export CORS_ORIGINS="${PYTHON_CORS_ORIGINS}"
-
-echo -e "${GREEN}✓ Environment variables exported to current shell session${NC}"
-echo ""
-
-# Ask if user wants to save to file
-read -p "Save these variables to a file for reuse? (y/n) [n]: " SAVE_TO_FILE
-SAVE_TO_FILE=${SAVE_TO_FILE:-n}
-
-if [[ $SAVE_TO_FILE =~ ^[Yy]$ ]]; then
-    EXPORT_FILE=".env-export.sh"
-    cat > "$EXPORT_FILE" << EOF
+# Save variables to file automatically
+EXPORT_FILE=".env-export.sh"
+cat > "$EXPORT_FILE" << EOF
 #!/bin/bash
 # Whisperrr Environment Variables
 # Generated by setup-env.sh on $(date)
@@ -157,20 +267,23 @@ echo "  WHISPERRR_SERVICE_URL=${PYTHON_URL}"
 echo "  CORS_ALLOWED_ORIGINS=${CORS_ORIGINS}"
 echo "  CORS_ORIGINS=${PYTHON_CORS_ORIGINS}"
 EOF
-    chmod +x "$EXPORT_FILE"
-    echo -e "${GREEN}✓ Variables saved to ${EXPORT_FILE}${NC}"
-    echo -e "${YELLOW}  To use later, run: source ${EXPORT_FILE}${NC}"
-    echo ""
-fi
+chmod +x "$EXPORT_FILE"
+echo -e "${GREEN}✓ Variables saved to ${EXPORT_FILE}${NC}"
+echo ""
 
 echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Setup Complete!${NC}"
 echo ""
-echo -e "${YELLOW}Next Steps:${NC}"
-echo "  1. Start the Python service: cd python-service && uvicorn app.main:app --host 0.0.0.0 --port ${PYTHON_PORT}"
-echo "  2. Start the Backend service: cd backend && ./mvnw spring-boot:run"
-echo "  3. Start the Frontend service: cd frontend && npm start"
+echo -e "${YELLOW}⚠️  IMPORTANT: Source the export file to activate environment variables${NC}"
 echo ""
-echo -e "${YELLOW}Note:${NC} These environment variables are only active in this shell session."
-echo -e "      If you open a new terminal, run this script again or source the export file."
+echo -e "${BLUE}Run this command to activate the environment variables:${NC}"
+echo -e "  ${GREEN}source ${EXPORT_FILE}${NC}"
+echo ""
+echo -e "${YELLOW}Next Steps:${NC}"
+echo "  1. Source the environment variables: source ${EXPORT_FILE}"
+echo "  2. Start the Python service: cd python-service && uvicorn app.main:app --host 0.0.0.0 --port ${PYTHON_PORT}"
+echo "  3. Start the Backend service: cd backend && ./mvnw spring-boot:run"
+echo "  4. Start the Frontend service: cd frontend && npm start"
+echo ""
+echo -e "${YELLOW}Note:${NC} You must source ${EXPORT_FILE} in each terminal session where you want to use these variables."
 echo ""

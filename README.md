@@ -79,107 +79,64 @@ If you prefer to run the services locally without Docker, follow these steps:
 
 Before starting, ensure you have the following installed:
 
-- **Java JDK 21** - Required for Spring Boot backend (the `mvnw` Maven wrapper requires Java JDK to run)
+- **Java JDK 21** - Required for Spring Boot backend
 - **Maven 3.6+** - For building Java backend (or use included `mvnw`)
-- **Node.js 18+** and **npm** - For React frontend (you may need a specific Node/npm version)
-- **Python 3.12** - For FastAPI transcription service (specific version required - see Dockerfile)
+- **Node.js 18+** and **npm** - For React frontend
+- **Python 3.12** - For FastAPI transcription service (specific version required)
 - **FFmpeg** - For audio processing (required by Python service)
 
-**📋 Need help checking versions or installing prerequisites?** See the [Prerequisites Guide](docs/getting-started/PREREQUISITES.md) for detailed instructions on checking your current versions and installation steps for each platform.
+**📋 Need help checking versions or installing prerequisites?** See the [Prerequisites Guide](docs/getting-started/PREREQUISITES.md) for detailed instructions.
 
-### Installation Steps
+### Setup Options
 
-#### 1. Clone the Repository
+#### Option 1: Localhost Development (Default - No Setup Needed)
 
-```bash
-git clone <repository-url>
-cd Whisperrr
-```
+If all services run on `localhost` with default ports, no environment variable configuration is needed. Simply start each service:
 
-#### 2. Start Python Service
+**Start services in separate terminals:**
 
-The Python service handles audio transcription using Faster Whisper.
+1. **Terminal 1 - Python Service:**
+   ```bash
+   cd python-service
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   python3 -m uvicorn app.main:app --host 0.0.0.0 --port 5001
+   ```
 
-```bash
-cd python-service
+2. **Terminal 2 - Backend Service:**
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
 
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+3. **Terminal 3 - Frontend Service:**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
+**Service URLs (localhost):**
+- Frontend: http://localhost:3737
+- Backend API: http://localhost:7331
+- Python Service: http://localhost:5001
 
-# Start the service (choose one method)
-# Option 1: Using uvicorn directly
-uvicorn app.main:app --host 0.0.0.0 --port 5001
+#### Option 2: Remote Development or Custom Ports
 
-# Option 2: Using python -m (more explicit, doesn't require uvicorn in PATH)
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 5001
-
-# Option 3: Run main.py directly (uses uvicorn.run() in the script)
-python3 -m app.main
-```
-
-The Python service will be available at `http://localhost:5001`
-
-**Note:** The first startup will download the Whisper model (default: `base`, ~74 MB), which may take a few minutes.
-
-#### 3. Start Backend Service
-
-The Spring Boot backend acts as a proxy and validation layer.
-
-**Note:** The `mvnw` Maven wrapper requires Java JDK 21 to be installed and available in your PATH.
-
-```bash
-cd backend
-
-# Build and run (using Maven wrapper)
-./mvnw spring-boot:run
-
-# Or if you have Maven installed globally
-mvn spring-boot:run
-```
-
-The backend API will be available at `http://localhost:7331`
-
-#### 4. Start Frontend Service
-
-The React frontend provides the user interface.
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm start
-```
-
-The frontend will be available at `http://localhost:3737` and will automatically open in your browser.
-
-### Running All Services
-
-**Before starting services:** If services are not running on localhost, configure environment variables first:
+If services run on different hosts or custom ports, use the setup script to configure environment variables:
 
 ```bash
 # Run the interactive setup script
 ./setup-env.sh
+
+# Source the export file to activate variables
+source .env-export.sh
+
+# Then start services as described above
 ```
 
-You'll need to run each service in a separate terminal window:
-
-1. **Terminal 1**: Python service (`cd python-service && uvicorn app.main:app --host 0.0.0.0 --port 5001`)
-2. **Terminal 2**: Backend service (`cd backend && ./mvnw spring-boot:run`)
-3. **Terminal 3**: Frontend service (`cd frontend && npm start`)
-
-**Important:** Start services in this order:
-1. Python service first (it takes longest to start due to model loading)
-2. Backend service second
-3. Frontend service last
-
-**Note:** For remote deployment or custom ports, see the [Environment Setup Guide](docs/guides/ENVIRONMENT_SETUP.md).
+**Note:** The setup script checks prerequisites and configures all necessary environment variables. For detailed setup instructions, see the [Quick Start Guide](docs/getting-started/QUICK_START.md).
 
 ### Verify Installation
 
@@ -222,16 +179,18 @@ Whisperrr/
 
 ## ⚙️ Configuration
 
-### Environment Variables for Multi-Service Communication
+### Environment Variables
 
-When services are not running on localhost, you need to configure environment variables so they can communicate. Use the interactive setup script for easy configuration:
+For **localhost development** (default ports), no environment variable configuration is needed.
+
+For **remote development or custom ports**, use the setup script:
 
 ```bash
-# Run the interactive setup script
 ./setup-env.sh
+source .env-export.sh
 ```
 
-For detailed information about environment variables and manual configuration, see the [Environment Setup Guide](docs/guides/ENVIRONMENT_SETUP.md).
+The setup script automatically configures all required environment variables. For detailed information about environment variables and advanced configuration, see the [Quick Start Guide](docs/getting-started/QUICK_START.md).
 
 ### Service-Specific Configuration
 
@@ -244,32 +203,16 @@ spring.servlet.multipart.max-file-size=50MB
 ```
 
 #### Python Service (`python-service/app/config.py`)
-**Single source of truth:** All defaults are defined in `config.py`. Environment variables can override defaults if needed.
-
-Default configuration:
+Default configuration (can be overridden via environment variables):
 - Model size: `base` (tiny, base, small, medium, large, large-v2, large-v3)
 - Max file size: `50MB`
 - CORS origins: `http://localhost:7331,http://localhost:3737`
 - Log level: `INFO`
 
-To override defaults, set environment variables:
-```bash
-export MAX_FILE_SIZE_MB=50
-export MODEL_SIZE=small
-```
-
 #### Frontend (`frontend/src/utils/constants.ts`)
-**Single source of truth:** All defaults are defined in `constants.ts`. Environment variables can override defaults if needed.
-
-Default configuration:
+Default configuration (can be overridden via environment variables):
 - Max file size: `50MB`
-- API URL: `http://localhost:7331/api` (can be overridden via `REACT_APP_API_URL`)
-
-To override defaults, set environment variables at build time:
-```bash
-export REACT_APP_API_URL=http://localhost:7331/api
-export REACT_APP_MAX_FILE_SIZE=50
-```
+- API URL: `http://localhost:7331/api`
 
 ## 🌐 API Documentation
 
@@ -378,8 +321,7 @@ docker compose ps
 ## 📚 Documentation
 
 - **[Prerequisites](docs/getting-started/PREREQUISITES.md)** - Check versions and install required software (Java, Python, Node.js)
-- **[Getting Started](docs/getting-started/QUICK_START.md)** - Quick start guide
-- **[Environment Setup](docs/guides/ENVIRONMENT_SETUP.md)** - Configure environment variables for multi-service communication
+- **[Quick Start Guide](docs/getting-started/QUICK_START.md)** - Complete setup guide including local and remote development
 - **[Architecture](docs/architecture/OVERVIEW.md)** - Technical architecture guide
 - **[Configuration](docs/guides/CONFIGURATION.md)** - Configuration guide
 - **[Codebase Guide](docs/development/CODEBASE_GUIDE.md)** - Developer guide
