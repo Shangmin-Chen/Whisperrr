@@ -161,6 +161,13 @@ The frontend will be available at `http://localhost:3737` and will automatically
 
 ### Running All Services
 
+**Before starting services:** If services are not running on localhost, configure environment variables first:
+
+```bash
+# Run the interactive setup script
+./setup-env.sh
+```
+
 You'll need to run each service in a separate terminal window:
 
 1. **Terminal 1**: Python service (`cd python-service && uvicorn app.main:app --host 0.0.0.0 --port 5001`)
@@ -171,6 +178,8 @@ You'll need to run each service in a separate terminal window:
 1. Python service first (it takes longest to start due to model loading)
 2. Backend service second
 3. Frontend service last
+
+**Note:** For remote deployment or custom ports, see the [Environment Setup Guide](docs/guides/ENVIRONMENT_SETUP.md).
 
 ### Verify Installation
 
@@ -213,7 +222,18 @@ Whisperrr/
 
 ## ⚙️ Configuration
 
-### Environment Variables
+### Environment Variables for Multi-Service Communication
+
+When services are not running on localhost, you need to configure environment variables so they can communicate. Use the interactive setup script for easy configuration:
+
+```bash
+# Run the interactive setup script
+./setup-env.sh
+```
+
+For detailed information about environment variables and manual configuration, see the [Environment Setup Guide](docs/guides/ENVIRONMENT_SETUP.md).
+
+### Service-Specific Configuration
 
 #### Backend (`backend/src/main/resources/application.properties`)
 ```properties
@@ -359,6 +379,7 @@ docker compose ps
 
 - **[Prerequisites](docs/getting-started/PREREQUISITES.md)** - Check versions and install required software (Java, Python, Node.js)
 - **[Getting Started](docs/getting-started/QUICK_START.md)** - Quick start guide
+- **[Environment Setup](docs/guides/ENVIRONMENT_SETUP.md)** - Configure environment variables for multi-service communication
 - **[Architecture](docs/architecture/OVERVIEW.md)** - Technical architecture guide
 - **[Configuration](docs/guides/CONFIGURATION.md)** - Configuration guide
 - **[Codebase Guide](docs/development/CODEBASE_GUIDE.md)** - Developer guide
