@@ -296,3 +296,4 @@ If problems persist, check:
 - Browser Network tab for failed requests
 - Service startup logs for environment variable loading
 
+
