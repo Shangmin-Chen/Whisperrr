@@ -22,7 +22,7 @@ Whisperrr transforms audio content into accurate, searchable text using state-of
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐
-│  React Frontend │◄──►│ Spring Boot API  │◄──►│   Python    │
+│  React Frontend │◄──►│ Spring Boot API │◄──►│   Python    │
 │   (Port 3737)   │    │   (Port 7331)   │    │  Service    │
 │                 │    │                 │    │ (Port 5001) │
 │  • File Upload  │    │ • Validation    │    │ • Whisper AI│
