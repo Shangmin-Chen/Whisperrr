@@ -2,7 +2,6 @@
 
 **Version:** 1.0  
 **Purpose:** Guidelines for keeping Whisperrr documentation up-to-date and maintainable  
-**Last Updated:** 2024-01-15
 
 ---
 
@@ -134,7 +133,6 @@ When updating documentation:
 - [ ] Grammar and spelling checked
 - [ ] "See Also" section updated
 - [ ] Table of contents updated (if needed)
-- [ ] Last updated date changed
 
 ### Checklist for New Documentation
 
@@ -342,7 +340,6 @@ These should prompt documentation review:
    - Ensure consistency
 
 4. **Publish:**
-   - Update "Last Updated" date
    - Commit with descriptive message
    - Notify if significant change
 
@@ -440,7 +437,6 @@ Consider adding to CI/CD pipeline:
 Track these metrics:
 
 1. **Freshness:**
-   - Last updated date per document
    - Age of oldest documentation
    - Update frequency
 
@@ -481,7 +477,6 @@ Track these metrics:
 - Duplicate content (use references)
 - Skip documentation updates
 - Use jargon without explanation
-- Forget to update "Last Updated" date
 - Break existing links
 - Write documentation in isolation
 

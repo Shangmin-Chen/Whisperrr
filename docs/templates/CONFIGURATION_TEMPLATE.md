@@ -2,7 +2,6 @@
 
 **Purpose:** Guide for configuring [System/Service Name]  
 **Audience:** Developers, DevOps, System Administrators  
-**Last Updated:** YYYY-MM-DD  
 **Related Docs:** [Links to related configuration or deployment docs]
 
 ---

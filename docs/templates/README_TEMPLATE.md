@@ -2,7 +2,6 @@
 
 **Purpose:** [Brief one-sentence description of document purpose]  
 **Audience:** [Target audience: e.g., Developers, Users, DevOps]  
-**Last Updated:** YYYY-MM-DD  
 **Related Docs:** [Links to related documentation]
 
 ---

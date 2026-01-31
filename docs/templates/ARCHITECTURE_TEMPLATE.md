@@ -2,7 +2,6 @@
 
 **Purpose:** [Describe the architecture being documented]  
 **Audience:** Technical leads, architects, developers  
-**Last Updated:** YYYY-MM-DD  
 **Related Docs:** [Links to related architecture docs]
 
 ---

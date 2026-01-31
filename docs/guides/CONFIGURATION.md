@@ -2,7 +2,6 @@
 
 **Purpose:** Complete guide for configuring all Whisperrr services  
 **Audience:** Developers, DevOps, System Administrators  
-**Last Updated:** 2024-01-15  
 **Related Docs:** [Environment Variables](ENVIRONMENT_VARIABLES.md), [Deployment Guide](DEPLOYMENT.md)
 
 ---

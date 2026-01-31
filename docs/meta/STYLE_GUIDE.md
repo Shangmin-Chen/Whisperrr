@@ -200,7 +200,6 @@ Every document should start with:
 
 **Purpose:** Brief one-sentence purpose  
 **Audience:** Target audience  
-**Last Updated:** Date (YYYY-MM-DD)  
 **Related Docs:** Links to related documentation
 
 ---
@@ -405,7 +404,6 @@ graph LR
 
 **Purpose:** ...  
 **Audience:** ...  
-**Last Updated:** YYYY-MM-DD
 
 ---
 
@@ -475,8 +473,7 @@ Use consistent status indicators:
 When documenting version-specific information:
 
 ```markdown
-> **Version:** 1.0.0  
-> **Last Updated:** 2024-01-15
+> **Version:** 1.0.0
 ```
 
 ---
@@ -506,8 +503,7 @@ Before publishing documentation, verify:
 # Configuration Guide
 
 **Purpose:** Guide for configuring Whisperrr services  
-**Audience:** Developers, DevOps  
-**Last Updated:** 2024-01-15
+**Audience:** Developers, DevOps
 
 ---
 

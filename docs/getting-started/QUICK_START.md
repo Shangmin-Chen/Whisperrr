@@ -566,5 +566,3 @@ Environment="WHISPERRR_SERVICE_URL=https://transcribe.example.com"
 - **[Codebase Guide](../development/CODEBASE_GUIDE.md)** - Navigate the codebase
 
 ---
-
-**Last Updated:** 2024-01-15

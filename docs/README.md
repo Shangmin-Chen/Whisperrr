@@ -8,25 +8,19 @@ Welcome to the Whisperrr documentation. This index helps you find the right docu
 
 ### For New Users
 - **[Quick Start Guide](getting-started/QUICK_START.md)** - Get up and running in 5 minutes
-- **[Installation Instructions](getting-started/INSTALLATION.md)** - Detailed setup guide (coming soon)
-- **[Troubleshooting](guides/TROUBLESHOOTING.md)** - Common issues and solutions (coming soon)
+- **[Prerequisites](getting-started/PREREQUISITES.md)** - Required software and installation
 
 ### For Developers
 - **[Architecture Overview](architecture/OVERVIEW.md)** - System architecture and design
 - **[Codebase Guide](development/CODEBASE_GUIDE.md)** - Navigate the codebase
-- **[Learning Pathway](development/LEARNING_PATHWAY.md)** - Onboarding for new developers (coming soon)
-- **[API Reference](guides/API.md)** - Complete API documentation (coming soon)
-- **[Code Style Guide](development/CODE_STYLE.md)** - Coding standards (coming soon)
 
 ### For Contributors
-- **[Contributing Guidelines](../CONTRIBUTING.md)** - How to contribute (coming soon)
-- **[Code Style Guide](development/CODE_STYLE.md)** - Code formatting rules (coming soon)
-- **[Testing Guide](development/TESTING.md)** - Testing requirements (coming soon)
+- **[Documentation Style Guide](meta/STYLE_GUIDE.md)** - Documentation standards
 
 ### For DevOps
-- **[Deployment Guide](guides/DEPLOYMENT.md)** - Production deployment (coming soon)
 - **[Configuration Guide](guides/CONFIGURATION.md)** - Configuration management
 - **[CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)** - Fix CORS issues, especially with Cloudflare Tunnel
+- **[Docker Deployment](deployment/DOCKER.md)** - Docker setup (not recommended)
 
 ---
 
@@ -36,16 +30,12 @@ Welcome to the Whisperrr documentation. This index helps you find the right docu
 Essential guides for new users and developers.
 
 - **[Quick Start](getting-started/QUICK_START.md)** - 5-minute quick start
-- **[Installation](getting-started/INSTALLATION.md)** - Setup instructions (coming soon)
-- **[Development Setup](getting-started/DEVELOPMENT_SETUP.md)** - Development environment (coming soon)
+- **[Prerequisites](getting-started/PREREQUISITES.md)** - Required software and installation
 
 ### Architecture
 Technical architecture and design documentation.
 
 - **[System Architecture](architecture/OVERVIEW.md)** - Overall system design
-- **[Data Flow](architecture/DATA_FLOW.md)** - Request/response flow (coming soon)
-- **[Design Patterns](architecture/DESIGN_PATTERNS.md)** - Patterns used in codebase (coming soon)
-- **[Service Interactions](architecture/SERVICE_INTERACTIONS.md)** - Inter-service communication (coming soon)
 
 ### Guides
 How-to guides and references.
@@ -53,17 +43,11 @@ How-to guides and references.
 - **[Features](guides/FEATURES.md)** - Platform features and capabilities
 - **[Configuration](guides/CONFIGURATION.md)** - Configuration management
 - **[CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)** - Fix CORS issues, especially with Cloudflare Tunnel
-- **[API Reference](guides/API.md)** - API documentation (coming soon)
-- **[Deployment](guides/DEPLOYMENT.md)** - Deployment instructions (coming soon)
-- **[Troubleshooting](guides/TROUBLESHOOTING.md)** - Common issues and solutions (coming soon)
 
 ### Development
 Developer-focused documentation.
 
 - **[Codebase Guide](development/CODEBASE_GUIDE.md)** - Codebase navigation
-- **[Learning Pathway](development/LEARNING_PATHWAY.md)** - Developer onboarding (coming soon)
-- **[Testing](development/TESTING.md)** - Testing guide (coming soon)
-- **[Code Style](development/CODE_STYLE.md)** - Code style guidelines (coming soon)
 
 ### Templates
 Documentation templates for creating new docs.
@@ -81,53 +65,6 @@ Documentation about documentation.
 - **[Documentation Structure](meta/DOCUMENTATION_STRUCTURE.md)** - Standardized structure
 - **[Style Guide](meta/STYLE_GUIDE.md)** - Formatting standards
 - **[Maintenance Guidelines](meta/MAINTENANCE.md)** - Keeping docs current
-
----
-
-## Finding Information
-
-### By Topic
-
-**Architecture & Design:**
-- [Architecture Overview](architecture/OVERVIEW.md)
-- [Design Patterns](architecture/DESIGN_PATTERNS.md) (coming soon)
-- [Service Interactions](architecture/SERVICE_INTERACTIONS.md) (coming soon)
-
-**Setup & Configuration:**
-- [Quick Start](getting-started/QUICK_START.md)
-- [Features](guides/FEATURES.md)
-- [Configuration Guide](guides/CONFIGURATION.md)
-- [CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)
-- [Development Setup](getting-started/DEVELOPMENT_SETUP.md) (coming soon)
-
-**Development:**
-- [Codebase Guide](development/CODEBASE_GUIDE.md)
-- [Learning Pathway](development/LEARNING_PATHWAY.md) (coming soon)
-- [Code Style](development/CODE_STYLE.md) (coming soon)
-- [Testing](development/TESTING.md) (coming soon)
-
-**API & Integration:**
-- [API Reference](guides/API.md) (coming soon)
-- [Data Flow](architecture/DATA_FLOW.md) (coming soon)
-
-**Deployment & Operations:**
-- [Deployment Guide](guides/DEPLOYMENT.md) (coming soon)
-- [Troubleshooting](guides/TROUBLESHOOTING.md) (coming soon)
-
-### By Task
-
-**I want to...**
-- **Get started quickly:** [Quick Start](getting-started/QUICK_START.md)
-- **Learn about features:** [Features Guide](guides/FEATURES.md)
-- **Set up development environment:** [Development Setup](getting-started/DEVELOPMENT_SETUP.md) (coming soon)
-- **Understand the architecture:** [Architecture Overview](architecture/OVERVIEW.md)
-- **Navigate the codebase:** [Codebase Guide](development/CODEBASE_GUIDE.md)
-- **Configure the system:** [Configuration Guide](guides/CONFIGURATION.md)
-- **Fix CORS issues:** [CORS Troubleshooting](guides/CORS_TROUBLESHOOTING.md)
-- **Deploy to production:** [Deployment Guide](guides/DEPLOYMENT.md) (coming soon)
-- **Use the API:** [API Reference](guides/API.md) (coming soon)
-- **Contribute code:** [Contributing Guidelines](../CONTRIBUTING.md) (coming soon)
-- **Fix a problem:** [Troubleshooting](guides/TROUBLESHOOTING.md) (coming soon)
 
 ---
 
@@ -151,39 +88,9 @@ All documentation should follow:
 ### Updating Existing Documentation
 
 1. Follow style guide
-2. Update "Last Updated" date
-3. Verify all links work
-4. Update related docs if needed
-5. Submit PR for review
-
----
-
-## Documentation Status
-
-### Completed
-- ✅ Documentation structure defined
-- ✅ Style guide created
-- ✅ Templates created
-- ✅ Maintenance guidelines established
-- ✅ Configuration guide
-- ✅ CORS troubleshooting guide
-- ✅ Architecture overview
-- ✅ Codebase guide
-- ✅ Quick start guide
-- ✅ Features documentation
-
-### In Progress
-- 🚧 Migrating existing documentation to new structure
-- 🚧 Creating missing documentation files
-
-### Planned
-- 📋 API documentation expansion
-- 📋 Testing guide creation
-- 📋 Code style guide creation
-- 📋 Deployment guide expansion
-- 📋 Contributing guidelines
-- 📋 Installation guide
-- 📋 Development setup guide
+2. Verify all links work
+3. Update related docs if needed
+4. Submit PR for review
 
 ---
 
@@ -201,9 +108,5 @@ Found an issue with the documentation? Have a suggestion?
 ## See Also
 
 - [Main README](../README.md) - Project overview
-- [Contributing Guidelines](../CONTRIBUTING.md) - How to contribute (coming soon)
-- [Changelog](../CHANGELOG.md) - Version history (coming soon)
 
 ---
-
-**Last Updated:** 2024-01-15

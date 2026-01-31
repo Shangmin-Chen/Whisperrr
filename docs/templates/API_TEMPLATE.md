@@ -1,8 +1,7 @@
 # API Reference
 
 **Purpose:** Complete API reference for [Service Name]  
-**Audience:** Developers, API consumers  
-**Last Updated:** YYYY-MM-DD  
+**Audience:** Developers, API consumers   
 **Base URL:** `http://localhost:7331/api` (development)  
 **Related Docs:** [Links to related API or integration docs]
 

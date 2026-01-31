@@ -2,8 +2,6 @@
 
 **Purpose:** Step-by-step guide for [what users will learn]  
 **Audience:** [Target audience: e.g., Developers, Users, DevOps]  
-**Last Updated:** YYYY-MM-DD  
-**Estimated Time:** [X minutes/hours]  
 **Prerequisites:** [What users need to know/have before starting]  
 **Related Docs:** [Links to related documentation]
 

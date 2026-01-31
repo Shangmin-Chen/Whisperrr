@@ -2,7 +2,6 @@
 
 **Purpose:** Guidelines for contributing to the Whisperrr project  
 **Audience:** Contributors, developers  
-**Last Updated:** YYYY-MM-DD  
 **Related Docs:** [Links to development and code style docs]
 
 ---
@@ -236,7 +235,6 @@ Follow the [Documentation Style Guide](../meta/STYLE_GUIDE.md).
 **Key Points:**
 - Use clear, concise language
 - Include code examples
-- Update "Last Updated" dates
 - Add cross-references
 
 ---
