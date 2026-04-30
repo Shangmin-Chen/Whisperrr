@@ -37,12 +37,12 @@ check_java() {
             return 0
         else
             echo -e "${RED}✗${NC} Wrong version: $JAVA_VERSION (need JDK 21)"
-            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            echo -e "  ${YELLOW}Install: JDK 21 (e.g. Eclipse Temurin, SDKMAN, or your OS package manager)${NC}"
             return 1
         fi
     else
         echo -e "${RED}✗${NC} Not found"
-        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        echo -e "  ${YELLOW}Install: JDK 21 (e.g. Eclipse Temurin, SDKMAN, or your OS package manager)${NC}"
         return 1
     fi
 }
@@ -57,12 +57,12 @@ check_python() {
             return 0
         else
             echo -e "${RED}✗${NC} Wrong version: $PYTHON_VERSION (need 3.12)"
-            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            echo -e "  ${YELLOW}Install: Python 3.12 (python.org, pyenv, or your OS package manager)${NC}"
             return 1
         fi
     else
         echo -e "${RED}✗${NC} Not found"
-        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        echo -e "  ${YELLOW}Install: Python 3.12 (python.org, pyenv, or your OS package manager)${NC}"
         return 1
     fi
 }
@@ -78,12 +78,12 @@ check_node() {
             return 0
         else
             echo -e "${RED}✗${NC} Wrong version: $NODE_VERSION (need 18+)"
-            echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+            echo -e "  ${YELLOW}Install: Node.js 18+ (nodejs.org, nvm, or your OS package manager)${NC}"
             return 1
         fi
     else
         echo -e "${RED}✗${NC} Not found"
-        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        echo -e "  ${YELLOW}Install: Node.js 18+ (nodejs.org, nvm, or your OS package manager)${NC}"
         return 1
     fi
 }
@@ -97,7 +97,7 @@ check_ffmpeg() {
         return 0
     else
         echo -e "${RED}✗${NC} Not found"
-        echo -e "  ${YELLOW}Install: See docs/getting-started/PREREQUISITES.md${NC}"
+        echo -e "  ${YELLOW}Install: FFmpeg (e.g. brew install ffmpeg, apt install ffmpeg, or ffmpeg.org)${NC}"
         return 1
     fi
 }
@@ -132,7 +132,7 @@ echo ""
 if [ $PREREQ_FAILED -eq 1 ]; then
     echo -e "${YELLOW}⚠️  Warning: Some prerequisites are missing or incorrect.${NC}"
     echo -e "${YELLOW}   You can continue with setup, but services may not work properly.${NC}"
-    echo -e "${YELLOW}   See docs/getting-started/PREREQUISITES.md for installation help.${NC}"
+    echo -e "${YELLOW}   Install JDK 21, Python 3.12, Node.js 18+, and FFmpeg using your preferred toolchain.${NC}"
     echo ""
     read -p "Continue with environment setup anyway? (y/N): " CONTINUE
     if [[ ! $CONTINUE =~ ^[Yy]$ ]]; then
