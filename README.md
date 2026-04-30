@@ -1,5 +1,13 @@
 # Whisperrr - AI-Powered Audio Transcription Platform
 
+> **Deprecated:** This monorepo is no longer maintained. Development continues in three separate repositories:
+>
+> - [whisperrr-frontend](https://github.com/Shangmin-Chen/whisperrr-frontend) — React (TypeScript) UI  
+> - [whisperrr-backend](https://github.com/Shangmin-Chen/whisperrr-backend) — Spring Boot API  
+> - [whisperrr-py-microservice](https://github.com/Shangmin-Chen/whisperrr-py-microservice) — FastAPI + Faster Whisper  
+>
+> Use those repos for issues, pull requests, and local setup. The content below describes this layout for archival reference only.
+
 A full-stack audio transcription platform using Faster Whisper (CTranslate2). Upload audio and get searchable text with segment timestamps—no database required.
 
 ## Architecture
